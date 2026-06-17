@@ -1,67 +1,662 @@
 <!doctype html>
 <html lang="nl">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<meta name="theme-color" content="#2d6a4f"/>
-<title>Noorwegen Reisplanner</title>
-<link rel="preconnect" href="https://unpkg.com">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f4f9f5;color:#173b2a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}main{max-width:980px;margin:auto;padding:16px 12px 70px}.hero{background:linear-gradient(135deg,#173a2a,#2d6a4f 65%,#52b788);color:white;border-radius:18px;padding:24px 20px;margin-bottom:12px}.hero h1{margin:3px 0 6px;font-size:26px}.sub{opacity:.9}.stats,.tabs,.filters,.links,.chips{display:flex;gap:7px;flex-wrap:wrap}.stats{margin-top:14px}.pill,.btn,button{border:1px solid #cfe3d4;background:white;color:#214b35;border-radius:999px;padding:8px 12px;font-weight:800;text-decoration:none;cursor:pointer}.pill{background:rgba(255,255,255,.16);color:white;border-color:rgba(255,255,255,.28);font-size:12px}.tabs{position:sticky;top:0;z-index:800;padding:8px 0;background:#f4f9f5ee;backdrop-filter:blur(10px)}.tabs button.active,.filters button.active{background:#2d6a4f;color:white}.card,.route,.form{background:white;border:1px solid #d7eadb;border-radius:15px;padding:14px;margin:12px 0;box-shadow:0 2px 12px rgba(39,91,61,.08)}.route{background:#e8f5e9}.head{display:flex;align-items:flex-start;gap:10px}.head h2{margin:0;font-size:20px;flex:1}.date{white-space:nowrap;background:#e8f5e9;color:#2d6a4f;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:900}.note{line-height:1.55;color:#365b44}.facts{background:#f7fbf8;border:1px dashed #b8d7c1;border-radius:12px;padding:10px 12px;margin:10px 0}.section{font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:950;color:#2d6a4f;margin:16px 0 8px}.activity{background:#f8fbf8;border:1px solid #d4e8d4;border-radius:13px;padding:12px;margin:9px 0}.activity.done{opacity:.58}.activityTop{display:flex;gap:8px;align-items:flex-start}.activityTop input[type=checkbox]{width:22px;height:22px}.activity h3{font-size:15px;margin:0 0 5px}.tag{font-size:12px;background:#e8f5e9;color:#2d6a4f;border-radius:999px;padding:3px 8px;font-weight:850}.desc{font-size:13px;line-height:1.55;color:#435b4c}.distance{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}.box{background:#f8fbf8;border:1px solid #d4e8d4;border-radius:12px;padding:10px}.box b{display:block}.notes,select,input,textarea{width:100%;border:1px solid #cfe3d4;border-radius:10px;padding:9px;font-family:inherit;font-size:15px}.notes{min-height:42px;margin-top:8px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:9px}.restaurant{background:#fff8f5;border:1px solid #e8c8a8;border-radius:12px;padding:12px}.restaurant b{color:#5a2a0a}.diary{background:#fffdf7;border:1px solid #eadfb8;border-radius:14px;padding:12px;margin:10px 0}.diary textarea{min-height:90px;background:#fffefb}.small{font-size:12px}.muted{color:#78937f}.footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}.danger{background:#fff5f5;border-color:#f3c2c2;color:#8a1f1f}.editPanel{background:#eef8f1;border:1px solid #cfe3d4;border-radius:12px;padding:12px;margin-top:8px}.editPanel label{display:block;font-size:12px;font-weight:900;margin:8px 0 4px}.mapWrap{height:68vh;min-height:430px;border-radius:16px;overflow:hidden;border:1px solid #cfe3d4}.leaflet-popup-content{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}.gptBox{background:#f1f5ff;border:1px solid #c5d3ff;border-radius:14px;padding:12px}.gptPrompt{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:white;border:1px solid #d8e1ff;border-radius:10px;padding:10px;white-space:pre-wrap}.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#173a2a;color:white;padding:10px 14px;border-radius:999px;z-index:9999;box-shadow:0 4px 14px #0003;display:none}@media(max-width:540px){.hero h1{font-size:23px}.tabs,.filters{overflow:auto;flex-wrap:nowrap;margin-left:-12px;margin-right:-12px;padding-left:12px}.tabs button,.filters button{white-space:nowrap}.card{padding:12px}.mapWrap{height:60vh;min-height:360px}}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#2d6a4f"/>
+  <meta name="description" content="Mobiele reisplanner met kaart, weer, favorieten, status, eigen toevoegingen, GPT-prompts en backup."/>
+  <title>Reisplanner</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root{
+      --bg:#f4f9f5;--card:#fff;--green:#2d6a4f;--dark:#173a2a;--soft:#e8f5e9;
+      --line:#d7eadb;--muted:#607466;--orange:#c46b24;--blue:#1565c0;--red:#b3261e;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--dark);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+    main{max-width:980px;margin:auto;padding:14px 12px 54px}
+    h1,h2,h3{line-height:1.15}
+    .hero{background:linear-gradient(135deg,#173a2a,#2d6a4f 65%,#52b788);color:#fff;border-radius:18px;padding:23px 20px;margin-bottom:12px}
+    .hero h1{margin:2px 0 7px;font-size:27px}
+    .sub{opacity:.92}
+    .row,.tabs,.filters,.chips,.links,.stats{display:flex;gap:7px;flex-wrap:wrap}
+    .tabs{position:sticky;top:0;z-index:20;background:#f4f9f5e8;backdrop-filter:blur(10px);padding:8px 0}
+    button,.btn,.pill{border:1px solid var(--line);background:#fff;color:#214b35;border-radius:999px;padding:8px 11px;font-weight:850;text-decoration:none;cursor:pointer}
+    .tabs button.active,.filters button.active,.btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+    .pill{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff;font-size:12px;margin-top:8px}
+    .card,.route,.form,.weatherBox{background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px;margin:12px 0;box-shadow:0 2px 12px rgba(39,91,61,.08)}
+    .route,.weatherBox{background:var(--soft)}
+    .head{display:flex;align-items:flex-start;gap:10px}.head h2{margin:0;flex:1;font-size:21px}
+    .date{white-space:nowrap;background:var(--soft);color:var(--green);border-radius:999px;padding:4px 9px;font-size:12px;font-weight:950}
+    .note{line-height:1.55;color:#365b44}.small{font-size:12px}.muted{color:var(--muted)}
+    .section{font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:950;color:var(--green);margin:16px 0 8px}
+    .facts{background:#f7fbf8;border:1px dashed #b8d7c1;border-radius:12px;padding:10px 12px;margin:10px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:9px}
+    .box{background:#f8fbf8;border:1px solid #d4e8d4;border-radius:12px;padding:10px}
+    .box b{display:block}
+    .activity{background:#f8fbf8;border:1px solid #d4e8d4;border-radius:14px;padding:12px;margin:9px 0;position:relative}
+    .activity.done{opacity:.62}.activity.plan{border-color:#9dccac}.activity.skip{opacity:.42}
+    .activity h3{font-size:16px;margin:0 0 5px}
+    .tag{font-size:12px;background:#e8f5e9;color:#2d6a4f;border-radius:999px;padding:3px 8px;font-weight:850}
+    .tag.must{background:#ffe7e2;color:#9d2a1f}.tag.rain{background:#e3f2fd;color:#1557a5}.tag.route{background:#fff0dc;color:#92510c}
+    .desc{font-size:13px;line-height:1.55;color:#435b4c}
+    .statusbar{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}.statusbar button{font-size:12px;padding:5px 8px}.statusbar button.active{background:#2d6a4f;color:#fff}
+    textarea,input,select{width:100%;border:1px solid #cfe3d4;border-radius:10px;padding:9px;font-family:inherit;font-size:15px;background:white}
+    textarea{min-height:80px}.notes{min-height:42px;margin-top:8px}
+    .restaurant{background:#fff8f5;border:1px solid #e8c8a8;border-radius:12px;padding:12px}.restaurant b{color:#5a2a0a}
+    #map{height:68vh;min-height:420px;border-radius:16px;border:1px solid var(--line);overflow:hidden;background:#dfeee5}
+    .legend{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.legend span{font-size:12px;background:white;border:1px solid var(--line);border-radius:999px;padding:5px 8px}
+    .warning{background:#fff8e1;border-color:#ecd38d}.danger{background:#fff5f5;border-color:#f3c2c2;color:#8a1f1f}
+    .copybox{background:#fbfffc;border:1px solid #cfe3d4;border-radius:12px;padding:10px;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+    .toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+    .footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}
+    @media(max-width:540px){
+      main{padding-left:10px;padding-right:10px}.hero h1{font-size:23px}
+      .tabs,.filters{overflow:auto;flex-wrap:nowrap;margin-left:-10px;margin-right:-10px;padding-left:10px}
+      .tabs button,.filters button{white-space:nowrap}.card{padding:12px}#map{height:62vh;min-height:380px}
+    }
+  </style>
 </head>
-<body><main id="app"></main><div id="toast" class="toast"></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<body>
+<main id="app"></main>
+
 <script>
-const trip={title:"Noorwegen Zomerreis 2026",subtitle:"16–29 juni · Auto + ferry · reisplanner + dagboek",route:"Sogndal → Skjåk → Valdres/Nord-Aurdal → Gjerstad → Kristiansand",stays:[
-{id:"sogndal",label:"Sogndal",date:"16–19 jun",base:"Appartement in Sogndalsfjøra",address:"Sogndalsfjøra",lat:61.228,lng:7.101,maps:"https://www.google.com/maps/search/?api=1&query=Sogndalsfj%C3%B8ra",note:"Fjord, gletsjers, Molden, Fjærland en Kaupanger. Dit is je actieve startpunt.",facts:["Sognefjord is de langste fjord van Noorwegen.","Molden is een van de mooiste uitzichtwandelingen rond de Lustrafjord.","Fjærland combineert gletsjers met boekendorp-sfeer."],dist:[['Molden parkeerplaats','±32 km','±35 min'],['Solvorn','±28 km','±30 min'],['Kaupanger Stavkerk','±12 km','±15 min'],['Bøyabreen','±38 km','±40 min'],['Fjærland','±42 km','±45 min'],['Nigardsbreen','±80 km','±1u15']],activities:[
-{id:'molden',name:"Molden hike",type:"wandelen",prio:"must",time:"3–4 uur",km:"±7 km retour",level:"gemiddeld",drive:"±35 min · ±32 km",lat:61.328,lng:7.287,desc:"Uitzichtberg boven Lustrafjord. Bosstart, daarna open terrein en panorama over fjord, Solvorn en bergen. Windjas mee.",maps:"https://www.google.com/maps/search/?api=1&query=Molden+Luster+parking",komoot:"https://www.komoot.com/search/Molden%20Luster",info:"https://ut.no/"},
-{id:'solvorn',name:"Solvorn na Molden",type:"dorp",prio:"leuk",time:"1 uur",drive:"±30 min vanaf verblijf / ±15 min vanaf Molden",lat:61.298,lng:7.241,desc:"Klein fjorddorpje met houten huizen, haven en rustige sfeer. Logische stop na Molden.",maps:"https://www.google.com/maps/search/?api=1&query=Solvorn"},
-{id:'nigardsbreen',name:"Nigardsbreen",type:"wandelen",prio:"must",time:"halve dag",km:"2–5 km",level:"makkelijk tot middel",drive:"±1u15 · ±80 km",lat:61.681,lng:7.195,desc:"Spectaculaire gletsjerervaring. Check boot/gids/tijden vooraf. Niet zomaar zelf het ijs op.",maps:"https://www.google.com/maps/search/?api=1&query=Nigardsbreen",komoot:"https://www.komoot.com/search/Nigardsbreen",info:"https://www.jostedal.com/"},
-{id:'boyabreen',name:"Bøyabreen + Fjærland",type:"wandelen",prio:"must",time:"halve dag",km:"±1 km wandelen",level:"makkelijk",drive:"±40 min · ±38 km",lat:61.480,lng:6.758,desc:"Korte gletsjerstop met veel resultaat. Combineer met koffie/lunch en boekwinkels in Fjærland.",maps:"https://www.google.com/maps/search/?api=1&query=B%C3%B8yabreen",komoot:"https://www.komoot.com/search/B%C3%B8yabreen"},
-{id:'kaupanger',name:"Kaupanger Stavkerk",type:"cultuur",prio:"leuk",time:"1 uur",drive:"±15 min · ±12 km",lat:61.185,lng:7.235,desc:"Historische staafkerk dichtbij Sogndal. Goede korte activiteit of regenoptie.",maps:"https://www.google.com/maps/search/?api=1&query=Kaupanger+Stave+Church"}],food:[['Dampskipskaien','Aan het water, handig voor eerste avond of koffie.','https://www.google.com/maps/search/?api=1&query=Dampskipskaien+Sogndal'],['Restauranthuset Malin','Lokale Noorse keuken in Sogndal.','https://www.google.com/maps/search/?api=1&query=Restauranthuset+Malin+Sogndal']]},
-{id:"skjak",label:"Skjåk",date:"19–23 jun",base:"Skjåk Solside",address:"Skjåk Solside, Skjåk",lat:61.883,lng:8.268,maps:"https://www.google.com/maps/search/?api=1&query=Skj%C3%A5k+Solside",note:"Droog bergdal tussen Breheimen, Reinheimen en Jotunheimen. Goed voor autoroutes, kloofwandelingen en Lom.",facts:["Skjåk is opvallend droog voor Noorwegen.","Lom ligt dichtbij en is ideaal voor koffie, bakkerij en staafkerk.","Sognefjellet is een verplaatsingsdag die voelt als een excursie."],dist:[['Lom','±20 km','±20 min'],['Dønfoss','±10 km','±10 min'],['Gjelbrue/Tundragjelet','±20 km','±20 min'],['Sota Sæter','±40 km','±45 min'],['Sognefjellet route','±35 km','±35 min']],activities:[
-{id:'sognefjellet',name:"Sognefjellet scenic route",type:"rijden",prio:"must",time:"halve dag",drive:"±35 min naar route",lat:61.566,lng:8.021,desc:"Een van de mooiste bergwegen van Noorwegen. Stop veel, zeker bij helder weer.",maps:"https://www.google.com/maps/search/?api=1&query=Sognefjellet",info:"https://www.nasjonaleturistveger.no/en/routes/sognefjellet/"},
-{id:'donfoss',name:"Dønfoss → Gjelbrue / Tundragjelet",type:"wandelen",prio:"must",time:"2–3 uur",level:"middel",drive:"±10–20 min",lat:61.894,lng:8.161,desc:"Rivier, kloof en droog dennenbos. Minder toeristisch dan de bekende fjordstops.",maps:"https://www.google.com/maps/search/?api=1&query=D%C3%B8nfoss+Skj%C3%A5k",komoot:"https://www.komoot.com/search/D%C3%B8nfoss%20Gjelbrue"},
-{id:'lom',name:"Lom Stavkyrkje + bakkerij",type:"cultuur",prio:"must",time:"1–2 uur",drive:"±20 min",lat:61.839,lng:8.568,desc:"Sterke combinatie: historische staafkerk, dorpje Lom en goede koffiestop.",maps:"https://www.google.com/maps/search/?api=1&query=Lom+Stave+Church"},
-{id:'sota',name:"Sota Sæter / Breheimen",type:"wandelen",prio:"leuk",time:"halve dag",level:"middel",drive:"±45 min",lat:61.956,lng:7.933,desc:"Rustiger berggebied. Neem kaart/water mee; minder voorzieningen onderweg.",maps:"https://www.google.com/maps/search/?api=1&query=Sota+S%C3%A6ter",komoot:"https://www.komoot.com/search/Sota%20S%C3%A6ter"}],food:[['Grotli Høyfjellshotell','Fjellhotel, mooi als lunchstop op hoogte.','https://www.google.com/maps/search/?api=1&query=Grotli+H%C3%B8yfjellshotell'],['Lom bakkerij','Bekende stop voor koffie/broodjes.','https://www.google.com/maps/search/?api=1&query=Lom+bakeri']]},
-{id:"valdres",label:"Valdres / Nord-Aurdal",date:"23–27 jun",base:"Førsøddin 30, 2920 Nord-Aurdal",address:"Førsøddin 30, 2920 Nord-Aurdal",lat:60.930,lng:9.357,maps:"https://www.google.com/maps/search/?api=1&query=F%C3%B8rs%C3%B8ddin+30+2920+Nord-Aurdal",note:"Valdres is de regio; Nord-Aurdal de gemeente. Basis voor Besseggen, Mjølkevegen, Bygdin en Fagernes.",facts:["Valdres is bekend om støls, bergboerderijen en bruine kaas.","Besseggen alleen doen bij goed weer en tijdig ferry checken.","Mjølkevegen is mooi per fiets, maar delen zijn ook per auto fraai."],dist:[['Fagernes','±15–20 km','±20 min'],['Bjørgovarden','±20 km','±25 min'],['Bygdin / M/S Bitihorn','±70 km','±1u10'],['Gjendesheim/Besseggen','±85 km','±1u25'],['Valdres Folkemuseum','±20 km','±20 min']],activities:[
-{id:'besseggen',name:"Besseggen Ridge",type:"wandelen",prio:"must",time:"6–8 uur",km:"14–18 km",level:"zwaar",drive:"±1u25 · ±85 km",lat:61.498,lng:8.809,desc:"Topwandeling tussen Gjende en Bessvatnet. Alleen bij stabiel weer. Ferry vooraf regelen.",maps:"https://www.google.com/maps/search/?api=1&query=Gjendesheim+Besseggen",komoot:"https://www.komoot.com/search/Besseggen"},
-{id:'mjolkevegen',name:"Mjølkevegen",type:"fiets",prio:"must",time:"halve/hele dag",level:"middel",drive:"afhankelijk van etappe",lat:61.194,lng:8.929,desc:"Stølsroute door bergweiden. Kies een deeltraject rond Beitostølen/Valdres als 50 km te lang wordt.",maps:"https://www.google.com/maps/search/?api=1&query=Mj%C3%B8lkevegen+Valdres",komoot:"https://www.komoot.com/search/Mj%C3%B8lkevegen"},
-{id:'bitihorn',name:"M/S Bitihorn op Bygdin",type:"water",prio:"must",time:"2–4 uur",drive:"±1u10",lat:61.333,lng:8.795,desc:"Bergmeerboot op hoogte. Check vaardagen/tijden vooraf.",maps:"https://www.google.com/maps/search/?api=1&query=M%2FS+Bitihorn+Bygdin",info:"https://www.jvb.no/en/ms-bitihorn/"},
-{id:'bjorgovarden',name:"Bjørgovarden",type:"wandelen",prio:"leuk",time:"2 uur",km:"±7 km",level:"makkelijk-middel",drive:"±25 min",lat:60.967,lng:9.245,desc:"Rustiger wandeling met panorama over Valdres.",maps:"https://www.google.com/maps/search/?api=1&query=Bj%C3%B8rgovarden+Aurdal",komoot:"https://www.komoot.com/search/Bj%C3%B8rgovarden"}],food:[['Danebu Kongsgaard','Mooi diner met lokale sfeer. Reserveren slim.','https://www.google.com/maps/search/?api=1&query=Danebu+Kongsgaard'],['Fagernes centrum','Praktisch voor boodschappen, koffie en diner.','https://www.google.com/maps/search/?api=1&query=Fagernes+restaurant']]},
-{id:"gjerstad",label:"Gjerstad",date:"27–29 jun",base:"Løyteveien 14, 4980 Gjerstad",address:"Løyteveien 14, 4980 Gjerstad",lat:58.872,lng:9.018,maps:"https://www.google.com/maps/search/?api=1&query=L%C3%B8yteveien+14+4980+Gjerstad",note:"Rustige laatste stop in Agder. Bos, meren en kustplaatsjes Risør en Tvedestrand dichtbij.",facts:["Risør en Tvedestrand zijn typische witte Sørlandet-kustplaatsjes.","Gjerstad is rustiger en minder toeristisch.","Goede regio om wat gas terug te nemen voor de terugreis."],dist:[['Gjerstadvatnet','±5–10 km','±10 min'],['Solhomfjell','±20–30 km','±30 min'],['Risør','±35 km','±35 min'],['Tvedestrand','±45 km','±45 min'],['Kristiansand ferry','±130 km','±1u45']],activities:[
-{id:'solhomfjell',name:"Solhomfjell",type:"wandelen",prio:"must",time:"3 uur",km:"±11 km",level:"middel",drive:"±30 min",lat:58.965,lng:8.833,desc:"Beste wandeling in deze regio: uitzicht, bos en rustig berglandschap.",maps:"https://www.google.com/maps/search/?api=1&query=Solhomfjell+Gjerstad",komoot:"https://www.komoot.com/search/Solhomfjell"},
-{id:'risor',name:"Risør",type:"dorp",prio:"must",time:"2–3 uur",drive:"±35 min",lat:58.720,lng:9.235,desc:"Witte houten huizen, haven, terrassen. Beste avond-/middagstop aan de kust.",maps:"https://www.google.com/maps/search/?api=1&query=Ris%C3%B8r"},
-{id:'tvedestrand',name:"Tvedestrand",type:"dorp",prio:"leuk",time:"1–2 uur",drive:"±45 min",lat:58.622,lng:8.932,desc:"Kleiner en rustiger dan Risør. Leuk voor koffie en havenwandeling.",maps:"https://www.google.com/maps/search/?api=1&query=Tvedestrand"},
-{id:'gjerstadvatnet',name:"Gjerstadvatnet",type:"water",prio:"leuk",time:"30–60 min",drive:"±10 min",lat:58.884,lng:9.061,desc:"Rustig meer voor zwemmen of korte pauze.",maps:"https://www.google.com/maps/search/?api=1&query=Gjerstadvatnet"}],food:[['Risør haven','Kustrestaurants, vis en terras.','https://www.google.com/maps/search/?api=1&query=Ris%C3%B8r+havn+restaurant'],['Brokelandheia','Praktisch bij E18, snelle optie.','https://www.google.com/maps/search/?api=1&query=Brokelandheia+restaurant']]}]};
-const icons={wandelen:'🥾',water:'💧',fiets:'🚴',rijden:'🚗',cultuur:'🏛️',dorp:'🏘️'};
-let tab='planner',filter='alle';
-const state=JSON.parse(localStorage.noorwegenStateV3||'{}');
-state.done=state.done||{};state.notes=state.notes||{};state.diary=state.diary||{};state.custom=state.custom||[];state.editing=state.editing||null;
-function save(){localStorage.noorwegenStateV3=JSON.stringify(state)}
-function toast(t){let el=document.getElementById('toast');el.textContent=t;el.style.display='block';setTimeout(()=>el.style.display='none',2000)}
-function acts(){return trip.stays.flatMap(s=>[...s.activities,...state.custom.filter(c=>c.stay===s.id)].map(a=>({...a,stayObj:s,stay:s.id})));}
-function key(a){return (a.stay||a.stayObj?.id)+'__'+a.name.replace(/\W+/g,'_')}
-function render(){const a=acts(),done=Object.values(state.done).filter(Boolean).length;document.getElementById('app').innerHTML=`<section class="hero"><div class="small">Persoonlijke reisplanner</div><h1>🇳🇴 ${trip.title}</h1><div class="sub">${trip.subtitle}</div><div class="stats"><span class="pill">${trip.stays.length} verblijven</span><span class="pill">${a.length} activiteiten</span><span class="pill">${a.filter(x=>x.prio==='must').length} must-do's</span><span class="pill">${done} gedaan</span></div></section><div class="tabs"><button class="${tab==='planner'?'active':''}" onclick="tab='planner';render()">🗺 Planner</button><button class="${tab==='kaart'?'active':''}" onclick="tab='kaart';render();setTimeout(drawMap,50)">📍 Kaart</button><button class="${tab==='dagboek'?'active':''}" onclick="tab='dagboek';render()">📖 Dagboek</button><button class="${tab==='toevoegen'?'active':''}" onclick="tab='toevoegen';render()">➕ Toevoegen</button><button class="${tab==='gpt'?'active':''}" onclick="tab='gpt';render()">🤖 Vraag GPT</button></div>${tab==='planner'?planner():tab==='kaart'?mapTab():tab==='dagboek'?diary():tab==='toevoegen'?addForm():gptTab()}<div class="footer">Afvinken, dagboek en eigen toevoegingen blijven lokaal op dit toestel bewaard.</div>`;}
-function planner(){return `<div class="route">🗺️ <b>Route:</b> ${trip.route}<br><span class="small">Gebruik filters; tik op Maps/Komoot voor navigatie.</span></div><div class="filters"><button class="${filter==='alle'?'active':''}" onclick="filter='alle';render()">alles</button><button class="${filter==='must'?'active':''}" onclick="filter='must';render()">⭐ must-do</button>${Object.keys(icons).map(t=>`<button class="${filter===t?'active':''}" onclick="filter='${t}';render()">${icons[t]} ${t}</button>`).join('')}</div>`+trip.stays.map(stayCard).join('')}
-function stayCard(s){let list=[...s.activities,...state.custom.filter(c=>c.stay===s.id)];list=list.filter(a=>filter==='alle'||(filter==='must'?a.prio==='must':a.type===filter));return `<section class="card"><div class="head"><h2>📍 ${s.label}</h2><span class="date">${s.date}</span></div><p class="note"><b>Verblijf:</b> ${s.base}<br>${s.note}</p><div class="links"><a class="btn" target="_blank" href="${s.maps}">📍 accommodatie</a></div><div class="section">Afstand vanaf accommodatie</div><div class="distance">${s.dist.map(d=>`<div class="box"><b>${d[0]}</b><span>${d[1]}</span><br><span>${d[2]}</span></div>`).join('')}</div><div class="facts"><b>💡 Weetjes</b><ul>${s.facts.map(f=>`<li>${f}</li>`).join('')}</ul></div><div class="section">Activiteiten (${list.length})</div>${list.map(a=>activity({...a,stayObj:s,stay:s.id})).join('')||'<p class="muted">Geen activiteiten voor dit filter.</p>'}<div class="section">🍽️ Eten / koffie</div><div class="grid">${s.food.map(f=>`<div class="restaurant"><b>${f[0]}</b><p class="desc">${f[1]}</p><a class="btn small" target="_blank" href="${f[2]}">📍 Maps</a></div>`).join('')}</div></section>`}
-function activity(a){const k=key(a),id=a.id||k;return `<div class="activity ${state.done[k]?'done':''}"><div class="activityTop"><input type="checkbox" ${state.done[k]?'checked':''} onchange="state.done['${k}']=this.checked;save();render()"><div><h3>${icons[a.type]||'✦'} ${a.name}</h3><div class="chips"><span class="tag">${a.prio==='must'?'⭐ must-do':'👍 leuk'}</span><span class="tag">${a.type||'eigen'}</span>${a.drive?`<span class="tag">🚗 ${a.drive}</span>`:''}${a.time?`<span class="tag">⏱ ${a.time}</span>`:''}${a.km?`<span class="tag">📏 ${a.km}</span>`:''}${a.level?`<span class="tag">🥾 ${a.level}</span>`:''}</div><p class="desc">${a.desc||''}</p><div class="links">${a.maps?`<a class="btn small" target="_blank" href="${a.maps}">📍 Maps</a>`:''}${a.komoot?`<a class="btn small" target="_blank" href="${a.komoot}">🧭 Komoot</a>`:''}${a.info?`<a class="btn small" target="_blank" href="${a.info}">🌐 Info</a>`:''}<button class="btn small" onclick="copyAsk('${k}')">🤖 vraag GPT</button>${a.custom?`<button class="btn small" onclick="editCustom('${a.id}')">✏️ wijzig</button><button class="btn small danger" onclick="removeCustom('${a.id}')">verwijder</button>`:''}</div><textarea class="notes" placeholder="Notitie bij deze activiteit..." oninput="state.notes['${k}']=this.value;save()">${state.notes[k]||''}</textarea>${state.editing===a.id?editPanel(a):''}</div></div></div>`}
-function editPanel(a){return `<div class="editPanel"><b>✏️ Toevoeging aanpassen</b><label>Naam</label><input id="eName" value="${esc(a.name)}"><label>Omschrijving / extra info</label><textarea id="eDesc">${esc(a.desc||'')}</textarea><label>Rijtijd/afstand vanaf accommodatie</label><input id="eDrive" value="${esc(a.drive||'')}"><label>Duur</label><input id="eTime" value="${esc(a.time||'')}"><label>Lengte</label><input id="eKm" value="${esc(a.km||'')}"><label>Moeilijkheid</label><input id="eLevel" value="${esc(a.level||'')}"><label>Google Maps link</label><input id="eMaps" value="${esc(a.maps||'')}"><label>Komoot link</label><input id="eKomoot" value="${esc(a.komoot||'')}"><label>Latitude</label><input id="eLat" value="${a.lat||''}"><label>Longitude</label><input id="eLng" value="${a.lng||''}"><div class="links"><button onclick="saveCustom('${a.id}')">Opslaan</button><button onclick="state.editing=null;render()">Annuleer</button></div></div>`}
-function esc(s){return String(s||'').replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;')}
-function mapTab(){return `<section class="card"><h2>📍 Kaart</h2><p class="note">Groen = verblijf. Pins = activiteiten. Tik op een pin voor Maps/Komoot en korte info.</p><div id="map" class="mapWrap"></div></section>`}
-function drawMap(){if(!window.L||!document.getElementById('map'))return;const map=L.map('map').setView([60.7,8.2],6);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);const pts=[];trip.stays.forEach(s=>{const m=L.marker([s.lat,s.lng]).addTo(map).bindPopup(`<b>🏠 ${s.label}</b><br>${s.base}<br><a target="_blank" href="${s.maps}">Maps</a>`);pts.push([s.lat,s.lng]);});acts().forEach(a=>{if(!a.lat||!a.lng)return;let popup=`<b>${icons[a.type]||'📍'} ${a.name}</b><br>${a.drive||''}<br>${a.time||''} ${a.km||''}<br><a target="_blank" href="${a.maps||('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a.name+' Norway'))}">Maps</a>${a.komoot?' · <a target="_blank" href="'+a.komoot+'">Komoot</a>':''}`;L.marker([a.lat,a.lng]).addTo(map).bindPopup(popup);pts.push([a.lat,a.lng]);});if(pts.length){map.fitBounds(pts,{padding:[25,25]});}}
-function diary(){const days=['Woensdag 18 juni - Molden / Sogndal','Donderdag 19 juni - Sogndal','Vrijdag 20 juni - rit naar Skjåk','Zaterdag 21 juni - Skjåk','Zondag 22 juni - Skjåk','Maandag 23 juni - naar Valdres','Dinsdag 24 juni - Valdres','Woensdag 25 juni - Valdres','Donderdag 26 juni - Valdres','Vrijdag 27 juni - naar Gjerstad','Zaterdag 28 juni - Gjerstad','Zondag 29 juni - terugreis'];return `<section class="card"><h2>📖 Reisdagboek</h2><p class="note">Schrijf per dag: weer, activiteit, eten, kosten, hoogtepunt en wat je later wilt onthouden.</p>${days.map(d=>`<div class="diary"><b>${d}</b><textarea placeholder="Weer, route, activiteiten, eten, kosten, hoogtepunt..." oninput="state.diary['${d}']=this.value;save()">${state.diary[d]||''}</textarea></div>`).join('')}</section>`}
-function addForm(){return `<section class="card"><h2>➕ Zelf activiteit toevoegen</h2><p class="note">Voeg iets toe dat je onderweg ziet. De app maakt alvast Maps/Komoot-links. Voor échte extra info gebruik je daarna de knop <b>🤖 verrijk met GPT</b>.</p><div class="form"><label>Bij verblijf</label><select id="addStay">${trip.stays.map(s=>`<option value="${s.id}">${s.label}</option>`).join('')}</select><label>Naam</label><input id="addName" placeholder="bijv. Feigefossen"><label>Type</label><select id="addType"><option value="wandelen">wandelen</option><option value="dorp">dorp</option><option value="water">water</option><option value="fiets">fiets</option><option value="rijden">rijden</option><option value="cultuur">cultuur</option></select><label>Eigen notitie</label><textarea id="addDesc" placeholder="Waarom wil je dit bewaren?"></textarea><button onclick="addCustom()">Toevoegen</button></div><div id="afterAdd"></div></section>`}
-function addCustom(){const name=document.getElementById('addName').value.trim();if(!name)return alert('Vul een naam in');const st=document.getElementById('addStay').value;const s=trip.stays.find(x=>x.id===st);const item={id:'c'+Date.now(),custom:true,stay:st,name,type:document.getElementById('addType').value,prio:'leuk',desc:document.getElementById('addDesc').value||'Zelf toegevoegd. Nog verrijken met GPT.',drive:'nog aanvullen',time:'nog aanvullen',km:'nog aanvullen',level:'nog aanvullen',maps:'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(name+' Norway'),komoot:'https://www.komoot.com/search/'+encodeURIComponent(name)};state.custom.push(item);save();document.getElementById('afterAdd').innerHTML=`<div class="gptBox" style="margin-top:12px"><b>Toegevoegd.</b><p class="note">Kopieer deze vraag naar ChatGPT om extra info te krijgen. Daarna kun je de toevoeging aanpassen met ✏️ wijzig.</p><button onclick="copyEnrich('${item.id}')">🤖 verrijk met GPT</button></div>`;toast('Toegevoegd');}
-function editCustom(id){state.editing=state.editing===id?null:id;save();render()}
-function saveCustom(id){const c=state.custom.find(x=>x.id===id);if(!c)return;c.name=document.getElementById('eName').value;c.desc=document.getElementById('eDesc').value;c.drive=document.getElementById('eDrive').value;c.time=document.getElementById('eTime').value;c.km=document.getElementById('eKm').value;c.level=document.getElementById('eLevel').value;c.maps=document.getElementById('eMaps').value;c.komoot=document.getElementById('eKomoot').value;c.lat=parseFloat(document.getElementById('eLat').value)||null;c.lng=parseFloat(document.getElementById('eLng').value)||null;state.editing=null;save();render();toast('Opgeslagen')}
-function removeCustom(id){if(confirm('Toevoeging verwijderen?')){state.custom=state.custom.filter(c=>c.id!==id);save();render()}}
-function gptTab(){return `<section class="card"><h2>🤖 Vraag GPT</h2><p class="note">Een statische GitHub Pages-site kan niet zelf met GPT praten zonder API-sleutel. Daarom maakt deze app een kant-en-klare prompt die je kopieert naar ChatGPT.</p><div class="gptBox"><b>Prompt voor deze reis</b><div class="gptPrompt" id="gptPrompt">${esc(basePrompt())}</div><div class="links"><button onclick="copyText(document.getElementById('gptPrompt').innerText)">Kopieer prompt</button><a class="btn" target="_blank" href="https://chat.openai.com/">Open ChatGPT</a></div></div></section>`}
-function basePrompt(){return `Ik werk aan mijn Noorwegen-reisplanner. Repo: remcodik/noorwegen-reis-. GitHub Pages: https://remcodik.github.io/noorwegen-reis-/ . Het is een single-file index.html app. Verblijven: Sogndal/Sogndalsfjøra, Skjåk Solside, Førsøddin 30 Nord-Aurdal, Løyteveien 14 Gjerstad. Geef bij nieuwe activiteiten: afstand vanaf accommodatie, rijtijd, duur, moeilijkheid, Google Maps, Komoot, beste tijdstip, restaurant/koffie in buurt, regenalternatief en korte beoordeling. Behoud bestaande gegevens.`}
-function copyAsk(k){const a=acts().find(x=>key(x)===k);const txt=`Verrijk deze activiteit voor mijn Noorwegen-reisplanner:\n\nActiviteit: ${a.name}\nVerblijf: ${a.stayObj.label} (${a.stayObj.base})\nHuidige info: ${a.desc||''}\n\nGeef: afstand vanaf accommodatie, rijtijd, duur, lengte, moeilijkheid, parkeerplaats, Google Maps-link, Komoot-link, beste tijdstip, regenalternatief, restaurant/koffie in buurt en korte beoordeling.`;copyText(txt)}
-function copyEnrich(id){const a=state.custom.find(x=>x.id===id);if(!a)return;const s=trip.stays.find(x=>x.id===a.stay);const txt=`Verrijk deze zelf toegevoegde activiteit voor mijn Noorwegen-reisplanner:\n\nActiviteit: ${a.name}\nVerblijf: ${s.label} - ${s.base}\nEigen notitie: ${a.desc||''}\n\nGeef mij concreet: afstand vanaf accommodatie, rijtijd, duur, lengte, moeilijkheid, parkeerplaats, Google Maps-link, Komoot-link, beste tijdstip, regenalternatief, restaurant/koffie in buurt, coördinaten en korte beoordeling. Maak het kort zodat ik het kan overnemen in de app.`;copyText(txt)}
-function copyText(txt){navigator.clipboard.writeText(txt).then(()=>toast('Gekopieerd voor GPT')).catch(()=>alert(txt))}
-render();
-</script></body></html>
+/* =========================================================
+   REMCO REISPLANNER - SINGLE FILE APP
+   - Upload als index.html in GitHub Pages root.
+   - Gebruikersdata blijft in localStorage: remcoTravelPlannerUserData
+   - Nieuwe reizen kunnen via het snelcommando "reisplan".
+   ========================================================= */
+
+const APP_VERSION = "definitief-index-2026-06-17";
+const STORAGE_KEY = "remcoTravelPlannerUserData";
+
+const baseTrip = {
+  title: "Noorwegen Zomerreis 2026",
+  subtitle: "16–29 juni · auto + ferry · iPhone reisplanner",
+  route: "Sogndal → Skjåk → Valdres/Nord-Aurdal → Gjerstad → Kristiansand",
+  stays: [
+    {
+      id:"sogndal", label:"Sogndal", date:"16–19 jun", base:"Appartement in Sogndalsfjøra",
+      address:"Sogndalsfjøra", lat:61.2296, lon:7.1019,
+      maps:"https://www.google.com/maps/search/?api=1&query=Sogndalsfj%C3%B8ra",
+      note:"Fjord, gletsjers, Molden, Fjærland, Solvorn en Urnes. Actieve start van de reis.",
+      facts:["Sognefjord is de langste fjord van Noorwegen.","Molden is een van de mooiste uitzichtwandelingen rond de Lustrafjord.","Urnes Stavkerk staat op UNESCO-werelderfgoedlijst."],
+      tomorrow:"Urnes Stavkerk + Solvorn: rustige fjorddag met ferry, cultuur en koffie aan het water.",
+      dist:[["Molden parkeerplaats","±32 km","±35 min"],["Solvorn","±28 km","±30 min"],["Urnes Stavkerk","±40–50 km + ferry","±1u–1u20"],["Bøyabreen","±38 km","±40 min"],["Fjærland","±42 km","±45 min"],["Nigardsbreen","±80 km","±1u15"]],
+      activities:[
+        {id:"molden",name:"Molden hike",type:"wandelen",prio:"must",status:"todo",time:"3–4 uur",km:"±7 km retour",level:"gemiddeld",drive:"±35 min · ±32 km",near:true,lat:61.347,lon:7.296,
+          desc:"Uitzichtberg boven Lustrafjord. Bosstart, daarna open terrein en groot panorama over fjord, Solvorn en bergen. Windjas mee.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Molden+Luster+parking",komoot:"https://www.komoot.com/search/Molden%20Luster",info:"https://ut.no/"},
+        {id:"solvorn",name:"Solvorn",type:"dorp",prio:"leuk",status:"todo",time:"1–2 uur",drive:"±30 min vanaf verblijf / ±15 min vanaf Molden",near:true,lat:61.301,lon:7.240,
+          desc:"Klein fjorddorpje met houten huizen, haven en rustige sfeer. Logische stop na Molden of voor/na ferry naar Urnes.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Solvorn"},
+        {id:"urnes",name:"Urnes Stavkerk dagplan",type:"cultuur",prio:"must",status:"plan",time:"halve dag",km:"korte wandeling",level:"makkelijk",drive:"±1u–1u20 incl. ferry",near:false,rain:true,lat:61.299,lon:7.322,
+          desc:"Morgenplan: rij naar Solvorn, neem de ferry naar Ornes/Urnes, bezoek Urnes Stavkerk, wandel kort rond en drink koffie/lunch in Solvorn. Check ferry- en openingstijden vooraf.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Urnes+Stave+Church",info:"https://www.visitnorway.com/listings/urnes-stave-church/"},
+        {id:"nigardsbreen",name:"Nigardsbreen",type:"wandelen",prio:"must",status:"todo",time:"halve dag",km:"2–5 km",level:"makkelijk tot middel",drive:"±1u15 · ±80 km",lat:61.676,lon:7.228,
+          desc:"Spectaculaire gletsjerervaring. Check boot/gids/tijden vooraf. Niet zomaar zelf het ijs op.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Nigardsbreen",komoot:"https://www.komoot.com/search/Nigardsbreen",info:"https://www.jostedal.com/"},
+        {id:"boyabreen",name:"Bøyabreen + Fjærland",type:"wandelen",prio:"must",status:"todo",time:"halve dag",km:"±1 km wandelen",level:"makkelijk",drive:"±40 min · ±38 km",near:false,rain:true,lat:61.486,lon:6.756,
+          desc:"Korte gletsjerstop met veel resultaat. Combineer met koffie/lunch en boekwinkels in Fjærland.",
+          maps:"https://www.google.com/maps/search/?api=1&query=B%C3%B8yabreen",komoot:"https://www.komoot.com/search/B%C3%B8yabreen"},
+        {id:"kaupanger",name:"Kaupanger Stavkerk",type:"cultuur",prio:"leuk",status:"todo",time:"1 uur",drive:"±15 min · ±12 km",near:true,rain:true,lat:61.185,lon:7.235,
+          desc:"Historische staafkerk dichtbij Sogndal. Goede korte activiteit of regenoptie.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Kaupanger+Stave+Church"}
+      ],
+      food:[
+        ["Dampskipskaien","Aan het water, handig voor eerste avond of koffie.","https://www.google.com/maps/search/?api=1&query=Dampskipskaien+Sogndal"],
+        ["Restauranthuset Malin","Lokale Noorse keuken in Sogndal.","https://www.google.com/maps/search/?api=1&query=Restauranthuset+Malin+Sogndal"]
+      ]
+    },
+    {
+      id:"skjak", label:"Skjåk", date:"19–23 jun", base:"Skjåk Solside", address:"Skjåk Solside, Skjåk", lat:61.883, lon:8.266,
+      maps:"https://www.google.com/maps/search/?api=1&query=Skj%C3%A5k+Solside",
+      note:"Droog bergdal tussen Breheimen, Reinheimen en Jotunheimen. Goed voor autoroutes, kloofwandelingen en Lom.",
+      facts:["Skjåk is opvallend droog voor Noorwegen.","Lom ligt dichtbij en is ideaal voor koffie, bakkerij en staafkerk.","Sognefjellet is een verplaatsingsdag die voelt als excursie."],
+      tomorrow:"Bij helder weer: Sognefjellet. Bij minder weer: Lom + stavkerk + bakkerij.",
+      dist:[["Lom","±20 km","±20 min"],["Dønfoss","±10 km","±10 min"],["Gjelbrue/Tundragjelet","±20 km","±20 min"],["Sota Sæter","±40 km","±45 min"],["Sognefjellet route","±35 km","±35 min"]],
+      activities:[
+        {id:"sognefjellet",name:"Sognefjellet scenic route",type:"rijden",prio:"must",status:"todo",time:"halve dag",drive:"±35 min naar route",lat:61.56,lon:8.0,
+          desc:"Een van de mooiste bergwegen van Noorwegen. Stop veel, zeker bij helder weer.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Sognefjellet",info:"https://www.nasjonaleturistveger.no/en/routes/sognefjellet/"},
+        {id:"donfoss",name:"Dønfoss → Gjelbrue / Tundragjelet",type:"wandelen",prio:"must",status:"todo",time:"2–3 uur",level:"middel",drive:"±10–20 min",near:true,lat:61.937,lon:8.238,
+          desc:"Rivier, kloof en droog dennenbos. Minder toeristisch dan de bekende fjordstops.",
+          maps:"https://www.google.com/maps/search/?api=1&query=D%C3%B8nfoss+Skj%C3%A5k",komoot:"https://www.komoot.com/search/D%C3%B8nfoss%20Gjelbrue"},
+        {id:"lom",name:"Lom Stavkyrkje + bakkerij",type:"cultuur",prio:"must",status:"todo",time:"1–2 uur",drive:"±20 min",near:true,rain:true,lat:61.837,lon:8.568,
+          desc:"Sterke combinatie: historische staafkerk, dorpje Lom en goede koffiestop.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Lom+Stave+Church"},
+        {id:"sota",name:"Sota Sæter / Breheimen",type:"wandelen",prio:"leuk",status:"todo",time:"halve dag",level:"middel",drive:"±45 min",lat:61.888,lon:7.768,
+          desc:"Rustiger berggebied. Neem kaart/water mee; minder voorzieningen onderweg.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Sota+S%C3%A6ter",komoot:"https://www.komoot.com/search/Sota%20S%C3%A6ter"}
+      ],
+      food:[
+        ["Grotli Høyfjellshotell","Fjellhotel, mooi als lunchstop op hoogte.","https://www.google.com/maps/search/?api=1&query=Grotli+H%C3%B8yfjellshotell"],
+        ["Lom bakkerij","Bekende stop voor koffie/broodjes.","https://www.google.com/maps/search/?api=1&query=Lom+bakeri"]
+      ]
+    },
+    {
+      id:"valdres", label:"Valdres / Nord-Aurdal", date:"23–27 jun", base:"Førsøddin 30, 2920 Nord-Aurdal", address:"Førsøddin 30, 2920 Nord-Aurdal", lat:60.985, lon:9.236,
+      maps:"https://www.google.com/maps/search/?api=1&query=F%C3%B8rs%C3%B8ddin+30+2920+Nord-Aurdal",
+      note:"Valdres is de regio; Nord-Aurdal de gemeente. Basis voor Besseggen, Mjølkevegen, Bygdin en Fagernes.",
+      facts:["Valdres is bekend om støls, bergboerderijen en bruine kaas.","Besseggen alleen doen bij goed weer en tijdig ferry checken.","Mjølkevegen is mooi per fiets, maar delen zijn ook per auto fraai."],
+      tomorrow:"Kies op weer: helder = Besseggen/Bygdin, wisselvallig = Fagernes/Valdres Folkemuseum/Bjørgovarden.",
+      dist:[["Fagernes","±15–20 km","±20 min"],["Bjørgovarden","±20 km","±25 min"],["Bygdin / M/S Bitihorn","±70 km","±1u10"],["Gjendesheim/Besseggen","±85 km","±1u25"],["Valdres Folkemuseum","±20 km","±20 min"]],
+      activities:[
+        {id:"besseggen",name:"Besseggen Ridge",type:"wandelen",prio:"must",status:"todo",time:"6–8 uur",km:"14–18 km",level:"zwaar",drive:"±1u25 · ±85 km",lat:61.494,lon:8.811,
+          desc:"Topwandeling tussen Gjende en Bessvatnet. Alleen bij stabiel weer. Ferry vooraf regelen.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Gjendesheim+Besseggen",komoot:"https://www.komoot.com/search/Besseggen"},
+        {id:"mjolkevegen",name:"Mjølkevegen",type:"fiets",prio:"must",status:"todo",time:"halve/hele dag",level:"middel",drive:"afhankelijk van etappe",lat:61.087,lon:9.06,
+          desc:"Stølsroute door bergweiden. Kies een deeltraject rond Beitostølen/Valdres als 50 km te lang wordt.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Mj%C3%B8lkevegen+Valdres",komoot:"https://www.komoot.com/search/Mj%C3%B8lkevegen"},
+        {id:"bitihorn",name:"M/S Bitihorn op Bygdin",type:"water",prio:"must",status:"todo",time:"2–4 uur",drive:"±1u10",lat:61.349,lon:8.797,
+          desc:"Bergmeerboot op hoogte. Check vaardagen/tijden vooraf.",
+          maps:"https://www.google.com/maps/search/?api=1&query=M%2FS+Bitihorn+Bygdin",info:"https://www.jvb.no/en/ms-bitihorn/"},
+        {id:"bjorgovarden",name:"Bjørgovarden",type:"wandelen",prio:"leuk",status:"todo",time:"2 uur",km:"±7 km",level:"makkelijk-middel",drive:"±25 min",near:true,lat:60.951,lon:9.402,
+          desc:"Rustiger wandeling met panorama over Valdres.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Bj%C3%B8rgovarden+Aurdal",komoot:"https://www.komoot.com/search/Bj%C3%B8rgovarden"},
+        {id:"valdresmuseum",name:"Valdres Folkemuseum",type:"cultuur",prio:"leuk",status:"todo",time:"1–2 uur",drive:"±20 min",near:true,rain:true,lat:60.985,lon:9.232,
+          desc:"Openluchtmuseum en goede regenoptie bij Fagernes.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Valdres+Folkemuseum"}
+      ],
+      food:[
+        ["Danebu Kongsgaard","Mooi diner met lokale sfeer. Reserveren slim.","https://www.google.com/maps/search/?api=1&query=Danebu+Kongsgaard"],
+        ["Fagernes centrum","Praktisch voor boodschappen, koffie en diner.","https://www.google.com/maps/search/?api=1&query=Fagernes+restaurant"]
+      ]
+    },
+    {
+      id:"gjerstad", label:"Gjerstad", date:"27–29 jun", base:"Løyteveien 14, 4980 Gjerstad", address:"Løyteveien 14, 4980 Gjerstad", lat:58.88, lon:9.02,
+      maps:"https://www.google.com/maps/search/?api=1&query=L%C3%B8yteveien+14+4980+Gjerstad",
+      note:"Rustige laatste stop in Agder. Bos, meren en kustplaatsjes Risør en Tvedestrand dichtbij.",
+      facts:["Risør en Tvedestrand zijn typische witte Sørlandet-kustplaatsjes.","Gjerstad is rustiger en minder toeristisch.","Goede regio om wat gas terug te nemen voor de terugreis."],
+      tomorrow:"Rustiger ritme: Solhomfjell bij goed weer, Risør/Tvedestrand bij wisselvallig weer.",
+      dist:[["Gjerstadvatnet","±5–10 km","±10 min"],["Solhomfjell","±20–30 km","±30 min"],["Risør","±35 km","±35 min"],["Tvedestrand","±45 km","±45 min"],["Kristiansand ferry","±130 km","±1u45"]],
+      activities:[
+        {id:"solhomfjell",name:"Solhomfjell",type:"wandelen",prio:"must",status:"todo",time:"3 uur",km:"±11 km",level:"middel",drive:"±30 min",lat:58.932,lon:8.882,
+          desc:"Beste wandeling in deze regio: uitzicht, bos en rustig berglandschap.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Solhomfjell+Gjerstad",komoot:"https://www.komoot.com/search/Solhomfjell"},
+        {id:"risor",name:"Risør",type:"dorp",prio:"must",status:"todo",time:"2–3 uur",drive:"±35 min",rain:true,lat:58.720,lon:9.234,
+          desc:"Witte houten huizen, haven, terrassen. Beste avond-/middagstop aan de kust.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Ris%C3%B8r"},
+        {id:"tvedestrand",name:"Tvedestrand",type:"dorp",prio:"leuk",status:"todo",time:"1–2 uur",drive:"±45 min",rain:true,lat:58.622,lon:8.927,
+          desc:"Kleiner en rustiger dan Risør. Leuk voor koffie en havenwandeling.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Tvedestrand"},
+        {id:"gjerstadvatnet",name:"Gjerstadvatnet",type:"water",prio:"leuk",status:"todo",time:"30–60 min",drive:"±10 min",near:true,lat:58.894,lon:9.011,
+          desc:"Rustig meer voor zwemmen of korte pauze.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Gjerstadvatnet"}
+      ],
+      food:[
+        ["Risør haven","Kustrestaurants, vis en terras.","https://www.google.com/maps/search/?api=1&query=Ris%C3%B8r+havn+restaurant"],
+        ["Brokelandheia","Praktisch bij E18, snelle optie.","https://www.google.com/maps/search/?api=1&query=Brokelandheia+restaurant"]
+      ]
+    }
+  ],
+  routeDays:[
+    {title:"Sogndal → Skjåk", desc:"Maak van de rit een scenic dag. Stop bij Sognefjellet, Lom en eventueel Grotli.", maps:"https://www.google.com/maps/dir/?api=1&origin=Sogndalsfj%C3%B8ra&destination=Skj%C3%A5k+Solside&waypoints=Lom%7CSognefjellet"},
+    {title:"Skjåk → Valdres", desc:"Rustige overgangsdag. Check of je via mooie fjellwegen wilt rijden.", maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside&destination=F%C3%B8rs%C3%B8ddin+30+2920+Nord-Aurdal"},
+    {title:"Valdres → Gjerstad", desc:"Langere rijdag. Plan lunchstop en neem niet te veel activiteit ernaast.", maps:"https://www.google.com/maps/dir/?api=1&origin=F%C3%B8rs%C3%B8ddin+30+2920+Nord-Aurdal&destination=L%C3%B8yteveien+14+4980+Gjerstad"}
+  ]
+};
+
+const typeIcon = {wandelen:"🥾",water:"💧",fiets:"🚴",rijden:"🚗",cultuur:"🏛️",dorp:"🏘️",eten:"🍽️",verblijf:"🏠"};
+const statusText = {todo:"wil ik doen", plan:"gepland", done:"gedaan", skip:"overslaan"};
+
+let tab = "planner";
+let filter = "alle";
+let activeStay = "alle";
+let mapMode = "alles";
+let map = null;
+let markers = [];
+
+const state = loadState();
+
+function loadState(){
+  let initial = {done:{},status:{},notes:{},favorites:{},custom:[],tripOverride:null,createdAt:new Date().toISOString()};
+  try{
+    const v = localStorage.getItem(STORAGE_KEY);
+    if(v) return Object.assign(initial, JSON.parse(v));
+    // migratie uit oudere versies
+    for(const k of ["noorwegenStateV3","noorwegenStateV2","noorwegenState"]){
+      const old = localStorage.getItem(k);
+      if(old){ initial.legacy = JSON.parse(old); break; }
+    }
+  }catch(e){ console.warn(e); }
+  return initial;
+}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+function trip(){ return state.tripOverride || baseTrip; }
+function allActivities(){
+  return trip().stays.flatMap(stay => {
+    const base = stay.activities.map(a => ({...a, stay}));
+    const custom = state.custom.filter(c => c.stayId === stay.id).map(c => ({...c, custom:true, stay}));
+    return [...base, ...custom];
+  });
+}
+function key(a){ return `${a.stay.id}__${a.id || a.name.replace(/\W+/g,'_')}`; }
+function getStatus(a){ return state.status[key(a)] || state.done[key(a)] && "done" || a.status || "todo"; }
+function setStatus(a,status){ state.status[key(a)] = status; state.done[key(a)] = status === "done"; save(); render(); }
+function toggleFavorite(a){ state.favorites[key(a)] = !state.favorites[key(a)]; save(); render(); }
+function isFav(a){ return !!state.favorites[key(a)]; }
+
+function render(){
+  const t = trip();
+  const acts = allActivities();
+  const doneCount = acts.filter(a => getStatus(a)==="done").length;
+  const favCount = acts.filter(isFav).length;
+  document.getElementById("app").innerHTML = `
+    <section class="hero">
+      <div class="small">Remco Travel Planner · ${APP_VERSION}</div>
+      <h1>🇳🇴 ${escapeHtml(t.title)}</h1>
+      <div class="sub">${escapeHtml(t.subtitle || "")}</div>
+      <div class="stats">
+        <span class="pill">${t.stays.length} verblijven</span>
+        <span class="pill">${acts.length} activiteiten</span>
+        <span class="pill">${acts.filter(a=>a.prio==="must").length} must-do's</span>
+        <span class="pill">${doneCount} gedaan</span>
+        <span class="pill">${favCount} favoriet</span>
+      </div>
+    </section>
+
+    <nav class="tabs">
+      ${tabButton("planner","🗺 Planner")}
+      ${tabButton("kaart","📍 Kaart")}
+      ${tabButton("vandaag","✨ Vandaag")}
+      ${tabButton("routes","🚗 Routes")}
+      ${tabButton("toevoegen","➕ Toevoegen")}
+      ${tabButton("reisplan","⚙️ Reisplan")}
+      ${tabButton("backup","💾 Backup")}
+    </nav>
+
+    ${tab === "planner" ? plannerView() :
+      tab === "kaart" ? mapView() :
+      tab === "vandaag" ? todayView() :
+      tab === "routes" ? routeView() :
+      tab === "toevoegen" ? addView() :
+      tab === "reisplan" ? reisplanView() :
+      backupView()
+    }
+
+    <div class="footer">Gegevens blijven lokaal op je iPhone bewaard. Maak backup vóór je een nieuwe versie uploadt.</div>
+  `;
+  if(tab === "kaart") setTimeout(initMap, 350);
+  if(tab === "planner" || tab === "vandaag") loadWeather();
+}
+function tabButton(id,label){ return `<button class="${tab===id?'active':''}" onclick="tab='${id}';render()">${label}</button>`; }
+
+function plannerView(){
+  const t = trip();
+  return `
+    <div class="route warning">💾 <b>Tip:</b> maak een backup vóór je een nieuwe <code>index.html</code> uploadt.</div>
+    <div class="route">🗺️ <b>Route:</b> ${escapeHtml(t.route || "")}</div>
+    <div class="filters">
+      ${filterButton("alle","alles")}
+      ${filterButton("must","⭐ must-do")}
+      ${filterButton("fav","❤️ favoriet")}
+      ${filterButton("near","📍 dichtbij")}
+      ${filterButton("rain","☔ regen")}
+      ${Object.entries(typeIcon).filter(([k])=>!["eten","verblijf"].includes(k)).map(([k,v])=>filterButton(k,`${v} ${k}`)).join("")}
+    </div>
+    ${t.stays.map(stayCard).join("")}
+  `;
+}
+function filterButton(id,label){ return `<button class="${filter===id?'active':''}" onclick="filter='${id}';render()">${label}</button>`; }
+
+function stayCard(stay){
+  let list = [...stay.activities, ...state.custom.filter(c=>c.stayId===stay.id).map(c=>({...c,custom:true}))].map(a=>({...a,stay}));
+  list = list.filter(a => {
+    if(filter==="alle") return true;
+    if(filter==="must") return a.prio==="must";
+    if(filter==="fav") return isFav(a);
+    if(filter==="near") return !!a.near || /±[0-3]?[0-9] min/.test(a.drive||"");
+    if(filter==="rain") return !!a.rain || a.type==="cultuur" || a.type==="dorp";
+    return a.type === filter;
+  });
+  return `
+    <section class="card" id="stay-${stay.id}">
+      <div class="head">
+        <h2>📍 ${escapeHtml(stay.label)}</h2>
+        <span class="date">${escapeHtml(stay.date)}</span>
+      </div>
+      <div class="weatherBox" id="weather-${stay.id}">🌦️ Weer laden voor ${escapeHtml(stay.label)}...</div>
+      <p class="note"><b>Verblijf:</b> ${escapeHtml(stay.base)}<br>${escapeHtml(stay.note || "")}</p>
+      <div class="links">
+        <a class="btn" target="_blank" href="${stay.maps}">📍 accommodatie</a>
+        <button onclick="copyStayPrompt('${stay.id}')">🤖 vraag GPT over deze regio</button>
+      </div>
+      ${stay.tomorrow ? `<div class="facts"><b>✨ Aanbevolen plan</b><br>${escapeHtml(stay.tomorrow)}</div>` : ""}
+      <div class="section">Afstand vanaf accommodatie</div>
+      <div class="grid">${(stay.dist||[]).map(d=>`<div class="box"><b>${escapeHtml(d[0])}</b><span>${escapeHtml(d[1])}</span><br><span>${escapeHtml(d[2])}</span></div>`).join("")}</div>
+      <div class="facts"><b>💡 Weetjes</b><ul>${(stay.facts||[]).map(f=>`<li>${escapeHtml(f)}</li>`).join("")}</ul></div>
+      <div class="section">Activiteiten (${list.length})</div>
+      ${list.length ? list.map(activityCard).join("") : `<p class="muted">Geen activiteiten voor dit filter.</p>`}
+      <div class="section">🍽️ Eten / koffie</div>
+      <div class="grid">${(stay.food||[]).map(f=>`<div class="restaurant"><b>${escapeHtml(f[0])}</b><p class="desc">${escapeHtml(f[1])}</p><a class="btn small" target="_blank" href="${f[2]}">📍 Maps</a></div>`).join("")}</div>
+    </section>
+  `;
+}
+
+function activityCard(a){
+  const k = key(a);
+  const status = getStatus(a);
+  const note = state.notes[k] || "";
+  const fav = isFav(a);
+  return `
+    <article class="activity ${status}">
+      <h3>${typeIcon[a.type]||"✦"} ${escapeHtml(a.name)} ${fav ? "❤️" : ""}</h3>
+      <div class="chips">
+        <span class="tag ${a.prio==="must"?"must":""}">${a.prio==="must"?"⭐ niet missen":"👍 als er tijd is"}</span>
+        ${a.rain ? `<span class="tag rain">☔ regenoptie</span>` : ""}
+        ${a.routeStop ? `<span class="tag route">🚗 onderwegstop</span>` : ""}
+        <span class="tag">${escapeHtml(a.type || "eigen")}</span>
+        ${a.drive ? `<span class="tag">🚗 ${escapeHtml(a.drive)}</span>` : ""}
+        ${a.time ? `<span class="tag">⏱ ${escapeHtml(a.time)}</span>` : ""}
+        ${a.km ? `<span class="tag">📏 ${escapeHtml(a.km)}</span>` : ""}
+        ${a.level ? `<span class="tag">🥾 ${escapeHtml(a.level)}</span>` : ""}
+      </div>
+      <p class="desc">${escapeHtml(a.desc || "")}</p>
+      <div class="statusbar">
+        ${statusButton(a,"todo","wil ik doen")}
+        ${statusButton(a,"plan","gepland")}
+        ${statusButton(a,"done","gedaan")}
+        ${statusButton(a,"skip","overslaan")}
+      </div>
+      <div class="links">
+        ${a.maps ? `<a class="btn small" target="_blank" href="${a.maps}">📍 Maps</a>` : ""}
+        ${a.komoot ? `<a class="btn small" target="_blank" href="${a.komoot}">🧭 Komoot</a>` : ""}
+        ${a.info ? `<a class="btn small" target="_blank" href="${a.info}">🌐 Info</a>` : ""}
+        <button class="small" onclick="toggleFavoriteByKey('${k}')">${fav ? "❤️ favoriet" : "🤍 favoriet"}</button>
+        <button class="small" onclick="copyActivityPrompt('${k}')">🤖 vraag GPT</button>
+        ${a.custom ? `<button class="small" onclick="editCustom('${a.id}')">✏️ wijzig</button><button class="small danger" onclick="removeCustom('${a.id}')">verwijder</button>` : ""}
+      </div>
+      <textarea class="notes" placeholder="Eigen notitie bij deze activiteit..." oninput="state.notes['${k}']=this.value;save()">${escapeHtml(note)}</textarea>
+    </article>
+  `;
+}
+function statusButton(a,status,label){
+  return `<button class="${getStatus(a)===status?'active':''}" onclick="setStatusByKey('${key(a)}','${status}')">${label}</button>`;
+}
+function setStatusByKey(k,status){ state.status[k]=status; state.done[k]=status==="done"; save(); render(); }
+function toggleFavoriteByKey(k){ state.favorites[k]=!state.favorites[k]; save(); render(); }
+
+function todayView(){
+  const t = trip();
+  const current = t.stays[0]; // simpele default; gebruiker kan zelf filteren op verblijf
+  const favs = allActivities().filter(isFav);
+  const rain = allActivities().filter(a=>a.rain || a.type==="cultuur" || a.type==="dorp").slice(0,8);
+  const near = allActivities().filter(a=>a.near || /±[0-3]?[0-9] min/.test(a.drive||"")).slice(0,8);
+  return `
+    <section class="card">
+      <h2>✨ Slimme keuzes</h2>
+      <div class="weatherBox" id="weather-${current.id}">🌦️ Weer laden...</div>
+      <div class="section">Aanbevolen nu</div>
+      <div class="facts">${escapeHtml(current.tomorrow || "Kies op weer, energie en rijtijd.")}</div>
+      <div class="section">📍 Dichtbij</div>
+      ${near.map(activityCard).join("")}
+      <div class="section">☔ Regenplan</div>
+      ${rain.map(activityCard).join("")}
+      <div class="section">❤️ Favorieten</div>
+      ${favs.length ? favs.map(activityCard).join("") : "<p class='muted'>Nog geen favorieten.</p>"}
+    </section>
+  `;
+}
+
+function routeView(){
+  return `<section class="card"><h2>🚗 Verplaatsingsdagen</h2><p class="note">Gebruik deze dagen niet als pure transportdagen. Zet 1–3 stops vast en hou marge.</p>${(trip().routeDays||[]).map(r=>`
+    <div class="box">
+      <b>${escapeHtml(r.title)}</b>
+      <p class="desc">${escapeHtml(r.desc)}</p>
+      <a class="btn small" target="_blank" href="${r.maps}">📍 route in Maps</a>
+      <button class="small" onclick="copyRoutePrompt('${escapeAttr(r.title)}')">🤖 vraag GPT routeplan</button>
+    </div>`).join("")}</section>`;
+}
+
+function mapView(){
+  return `
+    <section class="card">
+      <h2>📍 Kaart</h2>
+      <div class="toolbar">
+        <button class="${mapMode==='alles'?'active':''}" onclick="mapMode='alles';render()">alles</button>
+        <button class="${mapMode==='must'?'active':''}" onclick="mapMode='must';render()">⭐ must-do</button>
+        <button class="${mapMode==='rain'?'active':''}" onclick="mapMode='rain';render()">☔ regen</button>
+        <button class="${mapMode==='stay'?'active':''}" onclick="mapMode='stay';render()">🏠 verblijven</button>
+      </div>
+      <div class="legend"><span>🏠 verblijf</span><span>🥾 wandelen</span><span>🏛️ cultuur</span><span>🏘️ dorp</span><span>🚗 route</span></div>
+      <div id="map"></div>
+    </section>`;
+}
+function initMap(){
+  if(!window.L) {
+    document.getElementById("map").innerHTML = "<p style='padding:18px'>Kaartbibliotheek kon niet laden. Gebruik Maps-knoppen per activiteit.</p>";
+    return;
+  }
+  if(map) { map.remove(); map=null; markers=[]; }
+  map = L.map("map", {scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:"© OpenStreetMap"}).addTo(map);
+
+  const pts = [];
+  trip().stays.forEach(s=>{
+    if(mapMode==="alles" || mapMode==="stay"){
+      addMarker(s.lat,s.lon,`🏠 ${s.label}`, `<b>${s.label}</b><br>${s.base}<br><a target="_blank" href="${s.maps}">Maps</a>`);
+      pts.push([s.lat,s.lon]);
+    }
+    if(mapMode!=="stay"){
+      [...s.activities, ...state.custom.filter(c=>c.stayId===s.id).map(c=>({...c,custom:true}))].forEach(a=>{
+        if(!a.lat || !a.lon) return;
+        if(mapMode==="must" && a.prio!=="must") return;
+        if(mapMode==="rain" && !(a.rain || a.type==="cultuur" || a.type==="dorp")) return;
+        addMarker(a.lat,a.lon,`${typeIcon[a.type]||"📍"} ${a.name}`, `<b>${a.name}</b><br>${a.drive||""}<br><a target="_blank" href="${a.maps||`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.name)}`}">Maps</a>`);
+        pts.push([a.lat,a.lon]);
+      });
+    }
+  });
+  if(pts.length) map.fitBounds(pts, {padding:[28,28]}); else map.setView([61.2,7.1],7);
+}
+function addMarker(lat,lon,label,popup){
+  const m = L.marker([lat,lon]).addTo(map).bindPopup(popup);
+  m.bindTooltip(label);
+  markers.push(m);
+}
+
+function addView(){
+  return `
+    <section class="card">
+      <h2>➕ Zelf activiteit toevoegen</h2>
+      <p class="note">Voeg iets toe dat je onderweg ziet. De app maakt alvast Maps- en Komoot-links. Gebruik daarna “vraag GPT” voor extra info.</p>
+      <div class="form grid">
+        <label>Verblijf<select id="addStay">${trip().stays.map(s=>`<option value="${s.id}">${s.label}</option>`).join("")}</select></label>
+        <label>Naam<input id="addName" placeholder="bijv. Feigefossen"/></label>
+        <label>Type<select id="addType">${Object.keys(typeIcon).filter(k=>!["eten","verblijf"].includes(k)).map(k=>`<option value="${k}">${typeIcon[k]} ${k}</option>`).join("")}</select></label>
+        <label>Prioriteit<select id="addPrio"><option value="leuk">als er tijd is</option><option value="must">niet missen</option></select></label>
+        <label>Rijtijd/afstand<input id="addDrive" placeholder="bijv. ±25 min · ±18 km"/></label>
+        <label>Duur<input id="addTime" placeholder="bijv. 1–2 uur"/></label>
+      </div>
+      <label>Omschrijving / eigen reden<textarea id="addDesc" placeholder="Waarom wil je dit bewaren?"></textarea></label>
+      <button class="primary" onclick="addCustom()">Toevoegen</button>
+    </section>
+  `;
+}
+function addCustom(){
+  const name = document.getElementById("addName").value.trim();
+  if(!name) return alert("Vul een naam in.");
+  const id = "custom_" + Date.now();
+  state.custom.push({
+    id, custom:true, stayId:document.getElementById("addStay").value, name,
+    type:document.getElementById("addType").value, prio:document.getElementById("addPrio").value,
+    drive:document.getElementById("addDrive").value || "aanvullen",
+    time:document.getElementById("addTime").value || "",
+    desc:document.getElementById("addDesc").value || "Eigen toevoeging. Vraag GPT om extra info, afstand, parkeerplaats, Komoot en beoordeling.",
+    maps:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(name+" Norway"),
+    komoot:"https://www.komoot.com/search/"+encodeURIComponent(name),
+    lat:null, lon:null
+  });
+  save(); tab="planner"; render();
+}
+function editCustom(id){
+  const c = state.custom.find(x=>x.id===id);
+  if(!c) return;
+  const name = prompt("Naam", c.name); if(name===null) return;
+  const desc = prompt("Omschrijving", c.desc || ""); if(desc===null) return;
+  const drive = prompt("Rijtijd/afstand", c.drive || ""); if(drive===null) return;
+  c.name=name; c.desc=desc; c.drive=drive;
+  c.maps="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(name+" Norway");
+  c.komoot="https://www.komoot.com/search/"+encodeURIComponent(name);
+  save(); render();
+}
+function removeCustom(id){
+  if(!confirm("Deze eigen toevoeging verwijderen?")) return;
+  state.custom = state.custom.filter(c=>c.id!==id);
+  save(); render();
+}
+
+function reisplanView(){
+  const example = `reisplan
+Bestemming: Schotland
+Periode: 10-20 mei 2027
+
+Verblijven:
+10-13 mei | Inverness | adres of accommodatie
+13-16 mei | Isle of Skye | adres of accommodatie
+16-20 mei | Oban | adres of accommodatie
+
+Voorkeuren:
+wandelen, fietsen, natuur, dorpen, restaurants, niet te druk`;
+  return `
+    <section class="card">
+      <h2>⚙️ Snelcommando: reisplan</h2>
+      <p class="note">Gebruik dit commando voor een volgende reis. Plak je data en accommodaties hieronder. De app maakt een basisreis; daarna vraag je GPT om activiteiten te verrijken.</p>
+      <div class="copybox">${escapeHtml(example)}</div>
+      <button onclick="copyText(\`${escapeBacktick(example)}\`)">📋 kopieer voorbeeld</button>
+      <div class="section">Nieuwe reis maken in deze app</div>
+      <textarea id="reisplanInput" placeholder="${escapeHtml(example)}"></textarea>
+      <button class="primary" onclick="parseReisplan()">Maak basisreis</button>
+      <button onclick="copyReisplanPrompt()">🤖 vraag GPT om complete reisdata</button>
+      <div class="facts"><b>Belangrijk:</b> dit overschrijft alleen de basisreis in deze browser. Je backup kan alles herstellen.</div>
+    </section>
+  `;
+}
+function parseReisplan(){
+  const txt = document.getElementById("reisplanInput").value;
+  if(!txt.trim()) return alert("Plak eerst je reisplan.");
+  const title = (txt.match(/Bestemming:\s*(.+)/i)||[])[1] || "Nieuwe reis";
+  const period = (txt.match(/Periode:\s*(.+)/i)||[])[1] || "";
+  const lines = txt.split(/\n/).map(l=>l.trim()).filter(l=>/\|/.test(l));
+  const stays = lines.map((l,i)=>{
+    const p = l.split("|").map(x=>x.trim());
+    const label = p[1] || `Stop ${i+1}`;
+    const address = p[2] || label;
+    return {
+      id:"stay_"+i, label, date:p[0]||"", base:address, address,
+      lat: 52 + i, lon: 5 + i, maps:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(address),
+      note:"Basisstop uit reisplan. Laat GPT activiteiten, restaurants, wandelingen en afstanden aanvullen.",
+      facts:["Nog aanvullen via GPT."], tomorrow:"Nog aanvullen via GPT.", dist:[], activities:[], food:[]
+    };
+  });
+  if(!stays.length) return alert("Gebruik regels met: datum | plaats | adres");
+  state.tripOverride = {title:`${title} Reisplanner`, subtitle:period, route:stays.map(s=>s.label).join(" → "), stays, routeDays:[]};
+  save(); tab="planner"; render();
+}
+function copyReisplanPrompt(){
+  const txt = document.getElementById("reisplanInput").value || "Ik wil een reisplan maken.";
+  copyText(`Maak op basis van deze invoer een complete data-structuur voor mijn single-file reisplanner. Vul per verblijf aan: activiteiten, wandelingen, restaurants, regenopties, kaartcoördinaten, Maps-links, Komoot-links, afstanden vanaf accommodatie, verplaatsingsdagen en must-do's. Behoud de structuur zoals in mijn Noorwegen-app.\n\n${txt}`);
+}
+
+function backupView(){
+  const data = JSON.stringify(state,null,2);
+  return `
+    <section class="card">
+      <h2>💾 Backup</h2>
+      <p class="note">Maak backup vóór je een nieuwe versie uploadt. Hiermee blijven favorieten, status, notities en eigen activiteiten veilig.</p>
+      <div class="links">
+        <button onclick="downloadBackup()">📤 download JSON</button>
+        <button onclick="copyText(${JSON.stringify(data)})">📋 kopieer backup</button>
+        <button class="danger" onclick="resetUserData()">wis lokale data</button>
+      </div>
+      <div class="section">Backup terugzetten</div>
+      <input type="file" id="backupFile" accept="application/json" onchange="restoreFile(event)">
+      <textarea id="restoreText" placeholder="Of plak hier backup JSON"></textarea>
+      <button onclick="restoreText()">📥 herstel uit tekst</button>
+      <div class="section">Huidige opslag</div>
+      <div class="copybox">${escapeHtml(data)}</div>
+    </section>
+  `;
+}
+function downloadBackup(){
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download="reisplanner-backup.json"; a.click();
+  URL.revokeObjectURL(url);
+}
+function restoreFile(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ Object.assign(state, JSON.parse(r.result)); save(); alert("Backup hersteld."); render(); }catch(err){ alert("Geen geldige JSON."); } };
+  r.readAsText(f);
+}
+function restoreText(){
+  try{ Object.assign(state, JSON.parse(document.getElementById("restoreText").value)); save(); alert("Backup hersteld."); render(); }
+  catch(e){ alert("Geen geldige JSON."); }
+}
+function resetUserData(){
+  if(confirm("Alle lokale notities, favorieten, statussen en eigen toevoegingen wissen?")){
+    localStorage.removeItem(STORAGE_KEY); location.reload();
+  }
+}
+
+function copyActivityPrompt(k){
+  const a = allActivities().find(x=>key(x)===k);
+  if(!a) return;
+  const p = `Werk deze activiteit uit voor mijn reisplanner:\n\nActiviteit: ${a.name}\nVerblijf: ${a.stay.label}\nAccommodatie: ${a.stay.base}\nAdres: ${a.stay.address}\n\nGeef: afstand en reistijd vanaf accommodatie, parkeerplaats, beste tijdstip, duur, moeilijkheid, Google Maps-link, Komoot-link, restaurant/koffie in de buurt, regenalternatief, en of het de moeite waard is vergeleken met mijn andere opties.`;
+  copyText(p);
+}
+function copyStayPrompt(stayId){
+  const s = trip().stays.find(x=>x.id===stayId);
+  const p = `Werk deze regio verder uit voor mijn reisplanner:\n\nRegio: ${s.label}\nAccommodatie: ${s.base}\nAdres: ${s.address}\nPeriode: ${s.date}\n\nGeef activiteiten met afstand/tijd vanaf accommodatie, wandelingen, fietsroutes, restaurants, fotospots, regenopties, kaartcoördinaten, Maps-links en Komoot-links. Houd rekening met mijn voorkeur: wandelen, fietsen, natuur, niet te druk, restaurants en mooie uitzichten.`;
+  copyText(p);
+}
+function copyRoutePrompt(title){
+  copyText(`Maak een praktisch routeplan voor mijn verplaatsingsdag: ${title}. Geef stops onderweg, rijtijden, lunch/koffie, fotospots, korte wandelingen, Maps-route en wat ik beter kan overslaan.`);
+}
+function copyText(txt){
+  navigator.clipboard?.writeText(txt).then(()=>alert("Gekopieerd voor ChatGPT.")).catch(()=>prompt("Kopieer dit:", txt));
+}
+
+async function loadWeather(){
+  for(const s of trip().stays){
+    const el = document.getElementById("weather-"+s.id);
+    if(!el || !s.lat || !s.lon) continue;
+    try{
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${s.lat}&longitude=${s.lon}&current=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_days=1`;
+      const res = await fetch(url);
+      const j = await res.json();
+      const c = j.current;
+      const icon = weatherIcon(c.weather_code);
+      const advice = c.precipitation > 0 ? "regenplan slim" : c.wind_speed_10m > 25 ? "let op wind bij hoogtes" : "goed voor buiten";
+      el.innerHTML = `${icon} <b>${escapeHtml(s.label)}</b>: ${Math.round(c.temperature_2m)}°C · wind ${Math.round(c.wind_speed_10m)} km/u · neerslag ${c.precipitation||0} mm · ${advice}`;
+    }catch(e){ el.innerHTML = `🌦️ <b>${escapeHtml(s.label)}</b>: weer niet geladen. Gebruik lokale weersapp.`; }
+  }
+}
+function weatherIcon(code){
+  if([0].includes(code)) return "☀️";
+  if([1,2].includes(code)) return "🌤️";
+  if([3].includes(code)) return "☁️";
+  if([45,48].includes(code)) return "🌫️";
+  if([51,53,55,61,63,65,80,81,82].includes(code)) return "🌧️";
+  if([71,73,75,77,85,86].includes(code)) return "❄️";
+  if([95,96,99].includes(code)) return "⛈️";
+  return "🌦️";
+}
+
+function escapeHtml(s){ return String(s ?? "").replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
+function escapeAttr(s){ return String(s ?? "").replace(/'/g,"\\'").replace(/"/g,"&quot;"); }
+function escapeBacktick(s){ return String(s ?? "").replace(/`/g,"\\`").replace(/\$/g,"\\$"); }
+
+window.addEventListener("load", render);
+</script>
+</body>
+</html>
