@@ -61,6 +61,12 @@
     .driveAdvice.good{background:#edf7ed;border-color:#b9dfbd}.driveAdvice.warn{background:#fff8e1;border-color:#e9d28b}.driveAdvice.bad{background:#fff1f0;border-color:#efb8b3}
     .driveDot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.driveDot.good{background:#2e7d32}.driveDot.warn{background:#ef6c00}.driveDot.bad{background:#b3261e}
 
+
+    .versionBadge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.32);border-radius:12px;padding:8px 10px;margin-top:10px;font-size:12px}
+    .plannedBox{background:#eef7ff;border:1px solid #b8d9f6;border-radius:14px;padding:12px;margin:10px 0}
+    .topExperience{background:#fff4e6;border:1px solid #ffc078;border-radius:14px;padding:12px;margin:10px 0}
+    .changeLog{background:#fbfffc;border:1px solid #cfe3d4;border-radius:12px;padding:10px;margin:8px 0}
+
     .footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}
     @media(max-width:540px){
       main{padding-left:10px;padding-right:10px}.hero h1{font-size:23px}
@@ -81,7 +87,8 @@
    - Nieuwe reizen kunnen via het snelcommando "reisplan".
    ========================================================= */
 
-const APP_VERSION = "definitief-index-2026-06-18-rijstijl";
+const APP_VERSION = "definitief-index-2026-06-18-2230-klimapark-route";
+const LAST_UPDATE = "2026-06-18 22:30";
 const STORAGE_KEY = "remcoTravelPlannerUserData";
 
 const baseTrip = {
@@ -136,15 +143,15 @@ const baseTrip = {
       maps:"https://www.google.com/maps/search/?api=1&query=Skj%C3%A5k+Solside",
       note:"Droog bergdal tussen Breheimen, Reinheimen en Jotunheimen. Goed voor autoroutes, kloofwandelingen en Lom.",
       facts:["Skjåk is opvallend droog voor Noorwegen.","Lom ligt dichtbij en is ideaal voor koffie, bakkerij en staafkerk.","Sognefjellet is een verplaatsingsdag die voelt als excursie."],
-      tomorrow:"Bij helder weer: Sognefjellet. Bij minder weer: Lom + stavkerk + bakkerij.",
+      tomorrow:"Vrijdag: verplaatsingsdag via Sognefjellet, Bakeriet i Lom en Lom Stavkyrkje. Zaterdag rustig plannen; zondag staat Klimapark/Mimisbrunnr vast geboekt.",
       dist:[["Lom","±20 km","±20 min"],["Dønfoss","±10 km","±10 min"],["Gjelbrue/Tundragjelet","±20 km","±20 min"],["Sota Sæter","±40 km","±45 min"],["Sognefjellet route","±35 km","±35 min"]],
       activities:[
         {id:"sognefjellet",name:"Sognefjellet scenic route",type:"rijden",prio:"must",status:"todo",time:"halve dag",drive:"±35 min naar route",lat:61.56,lon:8.0,
           desc:"Een van de mooiste bergwegen van Noorwegen. Stop veel, zeker bij helder weer.",
           maps:"https://www.google.com/maps/search/?api=1&query=Sognefjellet",info:"https://www.nasjonaleturistveger.no/en/routes/sognefjellet/"},
-        {id:"juvasshytta",name:"Juvasshytta & Juvassbreen",type:"gletsjer",prio:"must",status:"todo",time:"halve dag",km:"korte wandeling / sneeuwervaring",level:"makkelijk-middel",drive:"±1u10 · ±65 km",lat:61.677,lon:8.368,
-          desc:"Beste gletsjer- en sneeuwervaring later in de week vanuit Skjåk. Ga alleen bij goed zicht; de weg en omgeving zijn hoogalpien.",
-          maps:"https://www.google.com/maps/search/?api=1&query=Juvasshytta+Juvassbreen",komoot:"https://www.komoot.com/search/Juvasshytta%20Juvassbreen"},
+        {id:"klimapark2469",name:"Klimapark 2469 / Mimisbrunnr",type:"gletsjer",prio:"must",status:"plan",time:"zondag · tour ±3 uur",km:"begeleide ijstunnel",level:"makkelijk-middel",drive:"±1u10 · ±72 km",lat:61.677,lon:8.368,
+          desc:"Topervaring van de reis. Ticket geboekt. Begeleide tocht naar Mimisbrunnr/ijstunnel bij Juvasshytta. Warm aankleden: hoogalpien gebied op ca. 1840 m. Vertrek ruim op tijd vanaf Skjåk Solside.",
+          maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&destination=Klimapark+2469+Juvasshytta",komoot:"https://www.komoot.com/search/Juvasshytta%20Juvassbreen"},
         {id:"donfoss",name:"Dønfoss → Gjelbrue / Tundragjelet",type:"wandelen",prio:"must",status:"todo",time:"2–3 uur",level:"middel",drive:"±10–20 min",near:true,lat:61.937,lon:8.238,
           desc:"Rivier, kloof en droog dennenbos. Minder toeristisch dan de bekende fjordstops.",
           maps:"https://www.google.com/maps/search/?api=1&query=D%C3%B8nfoss+Skj%C3%A5k",komoot:"https://www.komoot.com/search/D%C3%B8nfoss%20Gjelbrue"},
@@ -217,7 +224,7 @@ const baseTrip = {
     }
   ],
   routeDays:[
-    {title:"Sogndal → Skjåk", desc:"Maak van de rit een scenic dag. Stop bij Sognefjellet, Lom en eventueel Grotli.", maps:"https://www.google.com/maps/dir/?api=1&origin=Sogndalsfj%C3%B8ra&destination=Skj%C3%A5k+Solside&waypoints=Lom%7CSognefjellet"},
+    {title:"Vrijdag 19 juni · Sogndal → Skjåk", desc:"Aanbevolen verplaatsingsdag: Sogndal → Sognefjellet uitzichtpunten → lunch bij Bakeriet i Lom → Lom Stavkyrkje → Skjåk Solside. Rijtijd zonder stops ca. 3u30–4u; met lunch en korte stops ontspannen dag.", maps:"https://www.google.com/maps/dir/?api=1&origin=Sogndalsfj%C3%B8ra&destination=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&waypoints=Sognefjellet%7CBakeriet+i+Lom%7CLom+Stavkyrkje"},
     {title:"Skjåk → Valdres", desc:"Rustige overgangsdag. Check of je via mooie fjellwegen wilt rijden.", maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside&destination=F%C3%B8rs%C3%B8ddin+30+2920+Nord-Aurdal"},
     {title:"Valdres → Gjerstad", desc:"Langere rijdag. Plan lunchstop en neem niet te veel activiteit ernaast.", maps:"https://www.google.com/maps/dir/?api=1&origin=F%C3%B8rs%C3%B8ddin+30+2920+Nord-Aurdal&destination=L%C3%B8yteveien+14+4980+Gjerstad"}
   ]
@@ -274,6 +281,7 @@ function render(){
       <div class="small">Remco Travel Planner · ${APP_VERSION}</div>
       <h1>🇳🇴 ${escapeHtml(t.title)}</h1>
       <div class="sub">${escapeHtml(t.subtitle || "")}</div>
+      <div class="versionBadge">Laatste update: ${LAST_UPDATE}</div>
       <div class="stats">
         <span class="pill">${t.stays.length} verblijven</span>
         <span class="pill">${acts.length} activiteiten</span>
@@ -291,6 +299,7 @@ function render(){
       ${tabButton("toevoegen","➕ Toevoegen")}
       ${tabButton("reisplan","⚙️ Reisplan")}
       ${tabButton("backup","💾 Backup")}
+      ${tabButton("wijzigingen","📋 Wijzigingen")}
     </nav>
 
     ${tab === "planner" ? plannerView() :
@@ -299,7 +308,8 @@ function render(){
       tab === "routes" ? routeView() :
       tab === "toevoegen" ? addView() :
       tab === "reisplan" ? reisplanView() :
-      backupView()
+      tab === "backup" ? backupView() :
+      changelogView()
     }
 
     <div class="footer">Gegevens blijven lokaal op je iPhone bewaard. Maak backup vóór je een nieuwe versie uploadt.</div>
@@ -355,6 +365,7 @@ function stayCard(stay){
       </div>
       ${nearbyButtons(stay)}
       ${stay.tomorrow ? `<div class="facts"><b>✨ Aanbevolen plan</b><br>${escapeHtml(stay.tomorrow)}</div>` : ""}
+      ${fixedPlanning(stay)}
       ${stayDriveStyle(stay)}
       <div class="section">Afstand vanaf accommodatie</div>
       <div class="grid">${(stay.dist||[]).map(d=>`<div class="box"><b>${escapeHtml(d[0])}</b><span>${escapeHtml(d[1])}</span><br><span>${escapeHtml(d[2])}</span></div>`).join("")}</div>
@@ -418,6 +429,21 @@ function activityDriveBadge(a){
   const mins = driveMinutes(a);
   const cls = driveClass(mins);
   return `<span class="tag"><span class="driveDot ${cls}"></span>${driveLabel(mins)}</span>`;
+}
+
+
+function fixedPlanning(stay){
+  if(stay.id !== "skjak") return "";
+  return `
+    <div class="topExperience">
+      <b>🎟️ Vast gepland zondag: Klimapark 2469 / Mimisbrunnr</b><br>
+      Route vanaf Skjåk Solside: ±72 km · ±1u10. Begeleide ijstunnel/ijs-archeologie bij Juvasshytta. Warm aankleden en ruim op tijd vertrekken.
+      <div class="links" style="margin-top:8px">
+        <a class="btn small" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&destination=Klimapark+2469+Juvasshytta">📍 route naar Klimapark</a>
+        <a class="btn small" target="_blank" href="https://klimapark2469.no/">🌐 Klimapark info</a>
+      </div>
+    </div>
+  `;
 }
 
 function activityCard(a){
@@ -669,6 +695,25 @@ function parseReisplan(){
 function copyReisplanPrompt(){
   const txt = document.getElementById("reisplanInput").value || "Ik wil een reisplan maken.";
   copyText(`Maak op basis van deze invoer een complete data-structuur voor mijn single-file reisplanner. Vul per verblijf aan: activiteiten, wandelingen, restaurants, regenopties, kaartcoördinaten, Maps-links, Komoot-links, afstanden vanaf accommodatie, verplaatsingsdagen en must-do's. Behoud de structuur zoals in mijn Noorwegen-app.\n\n${txt}`);
+}
+
+
+function changelogView(){
+  return `
+    <section class="card">
+      <h2>📋 Laatste wijzigingen</h2>
+      <div class="changeLog"><b>2026-06-18 22:30</b><ul>
+        <li>Klimapark 2469 / Mimisbrunnr gemarkeerd als vaste planning zondag en topervaring.</li>
+        <li>Route vanaf Skjåk Solside naar Klimapark toegevoegd: ±72 km / ±1u10.</li>
+        <li>Verplaatsingsdag Sogndal → Skjåk toegevoegd met Sognefjellet, Bakeriet i Lom en Lom Stavkyrkje.</li>
+        <li>Vanaf nu staat de update-datum/tijd zichtbaar bovenin de app.</li>
+      </ul></div>
+      <div class="changeLog"><b>Eerder</b><ul>
+        <li>Rijstijl toegevoegd: op verblijfsdagen niet de hele dag autorijden.</li>
+        <li>Gletsjercategorie, winkels/cafés/restaurants rond accommodatie en rijtijdindicaties toegevoegd.</li>
+      </ul></div>
+    </section>
+  `;
 }
 
 function backupView(){
