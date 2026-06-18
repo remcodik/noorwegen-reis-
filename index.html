@@ -50,6 +50,10 @@
     #map{height:68vh;min-height:420px;border-radius:16px;border:1px solid var(--line);overflow:hidden;background:#dfeee5}
     .legend{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.legend span{font-size:12px;background:white;border:1px solid var(--line);border-radius:999px;padding:5px 8px}
     .warning{background:#fff8e1;border-color:#ecd38d}.danger{background:#fff5f5;border-color:#f3c2c2;color:#8a1f1f}
+    .stayFilter{min-width:180px;border-radius:999px;font-weight:800;padding:8px 11px;width:auto}
+    .pin{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:15px;font-weight:900;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+    .pin-stay{background:#111827}.pin-wandelen{background:#2e7d32}.pin-water{background:#1565c0}.pin-fiets{background:#ef6c00}.pin-rijden{background:#6a1b9a}.pin-cultuur{background:#795548}.pin-dorp{background:#00897b}.pin-eten{background:#c2410c}.pin-other{background:#64748b}
+
     .copybox{background:#fbfffc;border:1px solid #cfe3d4;border-radius:12px;padding:10px;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
     .toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
     .footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}
@@ -72,7 +76,7 @@
    - Nieuwe reizen kunnen via het snelcommando "reisplan".
    ========================================================= */
 
-const APP_VERSION = "definitief-index-2026-06-17";
+const APP_VERSION = "definitief-index-2026-06-17-kaartfilters";
 const STORAGE_KEY = "remcoTravelPlannerUserData";
 
 const baseTrip = {
@@ -294,6 +298,10 @@ function plannerView(){
     <div class="route warning">💾 <b>Tip:</b> maak een backup vóór je een nieuwe <code>index.html</code> uploadt.</div>
     <div class="route">🗺️ <b>Route:</b> ${escapeHtml(t.route || "")}</div>
     <div class="filters">
+      <select class="stayFilter" onchange="activeStay=this.value;render()">
+        <option value="alle" ${activeStay==="alle"?"selected":""}>🏠 alle accommodaties</option>
+        ${t.stays.map(s=>`<option value="${s.id}" ${activeStay===s.id?"selected":""}>🏠 ${escapeHtml(s.label)}</option>`).join("")}
+      </select>
       ${filterButton("alle","alles")}
       ${filterButton("must","⭐ must-do")}
       ${filterButton("fav","❤️ favoriet")}
@@ -301,7 +309,7 @@ function plannerView(){
       ${filterButton("rain","☔ regen")}
       ${Object.entries(typeIcon).filter(([k])=>!["eten","verblijf"].includes(k)).map(([k,v])=>filterButton(k,`${v} ${k}`)).join("")}
     </div>
-    ${t.stays.map(stayCard).join("")}
+    ${t.stays.filter(s=>activeStay==="alle"||activeStay===s.id).map(stayCard).join("")}
   `;
 }
 function filterButton(id,label){ return `<button class="${filter===id?'active':''}" onclick="filter='${id}';render()">${label}</button>`; }
@@ -420,14 +428,32 @@ function mapView(){
     <section class="card">
       <h2>📍 Kaart</h2>
       <div class="toolbar">
+        <select class="stayFilter" onchange="activeStay=this.value;render()">
+          <option value="alle" ${activeStay==="alle"?"selected":""}>🏠 alle accommodaties</option>
+          ${trip().stays.map(s=>`<option value="${s.id}" ${activeStay===s.id?"selected":""}>🏠 ${escapeHtml(s.label)}</option>`).join("")}
+        </select>
         <button class="${mapMode==='alles'?'active':''}" onclick="mapMode='alles';render()">alles</button>
         <button class="${mapMode==='must'?'active':''}" onclick="mapMode='must';render()">⭐ must-do</button>
+        <button class="${mapMode==='fav'?'active':''}" onclick="mapMode='fav';render()">❤️ favoriet</button>
+        <button class="${mapMode==='near'?'active':''}" onclick="mapMode='near';render()">📍 dichtbij</button>
         <button class="${mapMode==='rain'?'active':''}" onclick="mapMode='rain';render()">☔ regen</button>
+        ${Object.entries(typeIcon).filter(([k])=>!["eten","verblijf"].includes(k)).map(([k,v])=>`<button class="${mapMode===k?'active':''}" onclick="mapMode='${k}';render()">${v} ${k}</button>`).join("")}
         <button class="${mapMode==='stay'?'active':''}" onclick="mapMode='stay';render()">🏠 verblijven</button>
       </div>
-      <div class="legend"><span>🏠 verblijf</span><span>🥾 wandelen</span><span>🏛️ cultuur</span><span>🏘️ dorp</span><span>🚗 route</span></div>
+      <div class="legend">
+        <span>⚫ verblijf</span><span>🟢 wandelen</span><span>🔵 water</span><span>🟠 fiets</span><span>🟣 rijden</span><span>🟤 cultuur</span><span>🟦 dorp</span>
+      </div>
       <div id="map"></div>
     </section>`;
+}
+function mapActivityPasses(a){
+  if(mapMode==="alles") return true;
+  if(mapMode==="must") return a.prio==="must";
+  if(mapMode==="fav") return isFav(a);
+  if(mapMode==="near") return !!a.near || /±[0-3]?[0-9] min/.test(a.drive||"");
+  if(mapMode==="rain") return !!a.rain || a.type==="cultuur" || a.type==="dorp";
+  if(mapMode==="stay") return false;
+  return a.type === mapMode;
 }
 function initMap(){
   if(!window.L) {
@@ -439,25 +465,33 @@ function initMap(){
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:"© OpenStreetMap"}).addTo(map);
 
   const pts = [];
-  trip().stays.forEach(s=>{
+  trip().stays.filter(s=>activeStay==="alle"||activeStay===s.id).forEach(s=>{
     if(mapMode==="alles" || mapMode==="stay"){
-      addMarker(s.lat,s.lon,`🏠 ${s.label}`, `<b>${s.label}</b><br>${s.base}<br><a target="_blank" href="${s.maps}">Maps</a>`);
+      addMarker(s.lat,s.lon,"verblijf",`🏠 ${s.label}`, `<b>${s.label}</b><br>${s.base}<br><a target="_blank" href="${s.maps}">Maps</a>`);
       pts.push([s.lat,s.lon]);
     }
     if(mapMode!=="stay"){
-      [...s.activities, ...state.custom.filter(c=>c.stayId===s.id).map(c=>({...c,custom:true}))].forEach(a=>{
+      [...s.activities, ...state.custom.filter(c=>c.stayId===s.id).map(c=>({...c,custom:true,stay:s}))].forEach(a=>{
         if(!a.lat || !a.lon) return;
-        if(mapMode==="must" && a.prio!=="must") return;
-        if(mapMode==="rain" && !(a.rain || a.type==="cultuur" || a.type==="dorp")) return;
-        addMarker(a.lat,a.lon,`${typeIcon[a.type]||"📍"} ${a.name}`, `<b>${a.name}</b><br>${a.drive||""}<br><a target="_blank" href="${a.maps||`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.name)}`}">Maps</a>`);
+        const withStay = {...a,stay:s};
+        if(!mapActivityPasses(withStay)) return;
+        addMarker(a.lat,a.lon,a.type,`${typeIcon[a.type]||"📍"} ${a.name}`, `<b>${a.name}</b><br>${a.drive||""}<br>${a.prio==="must"?"⭐ niet missen<br>":""}${a.rain?"☔ regenoptie<br>":""}<a target="_blank" href="${a.maps||`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.name)}`}">Maps</a>`);
         pts.push([a.lat,a.lon]);
       });
     }
   });
   if(pts.length) map.fitBounds(pts, {padding:[28,28]}); else map.setView([61.2,7.1],7);
 }
-function addMarker(lat,lon,label,popup){
-  const m = L.marker([lat,lon]).addTo(map).bindPopup(popup);
+function addMarker(lat,lon,type,label,popup){
+  const iconClass = type==="verblijf" ? "pin-stay" : "pin-" + (type || "other");
+  const icon = L.divIcon({
+    className: "",
+    html: `<div class="pin ${iconClass}">${typeIcon[type] || (type==="verblijf" ? "🏠" : "📍")}</div>`,
+    iconSize: [30,30],
+    iconAnchor: [15,15],
+    popupAnchor: [0,-14]
+  });
+  const m = L.marker([lat,lon], {icon}).addTo(map).bindPopup(popup);
   m.bindTooltip(label);
   markers.push(m);
 }
