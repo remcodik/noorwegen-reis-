@@ -52,10 +52,15 @@
     .warning{background:#fff8e1;border-color:#ecd38d}.danger{background:#fff5f5;border-color:#f3c2c2;color:#8a1f1f}
     .stayFilter{min-width:180px;border-radius:999px;font-weight:800;padding:8px 11px;width:auto}
     .pin{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:15px;font-weight:900;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.35)}
-    .pin-stay{background:#111827}.pin-wandelen{background:#2e7d32}.pin-water{background:#1565c0}.pin-fiets{background:#ef6c00}.pin-rijden{background:#6a1b9a}.pin-cultuur{background:#795548}.pin-dorp{background:#00897b}.pin-eten{background:#c2410c}.pin-other{background:#64748b}
+    .pin-stay{background:#111827}.pin-gletsjer{background:#0f4c81}.pin-wandelen{background:#2e7d32}.pin-water{background:#1565c0}.pin-fiets{background:#ef6c00}.pin-rijden{background:#6a1b9a}.pin-cultuur{background:#795548}.pin-dorp{background:#00897b}.pin-eten{background:#c2410c}.pin-other{background:#64748b}
 
     .copybox{background:#fbfffc;border:1px solid #cfe3d4;border-radius:12px;padding:10px;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
     .toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+
+    .driveAdvice{border-radius:13px;padding:11px 12px;margin:10px 0;border:1px solid #d7eadb;background:#f8fbf8}
+    .driveAdvice.good{background:#edf7ed;border-color:#b9dfbd}.driveAdvice.warn{background:#fff8e1;border-color:#e9d28b}.driveAdvice.bad{background:#fff1f0;border-color:#efb8b3}
+    .driveDot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.driveDot.good{background:#2e7d32}.driveDot.warn{background:#ef6c00}.driveDot.bad{background:#b3261e}
+
     .footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}
     @media(max-width:540px){
       main{padding-left:10px;padding-right:10px}.hero h1{font-size:23px}
@@ -76,7 +81,7 @@
    - Nieuwe reizen kunnen via het snelcommando "reisplan".
    ========================================================= */
 
-const APP_VERSION = "definitief-index-2026-06-17-kaartfilters";
+const APP_VERSION = "definitief-index-2026-06-18-rijstijl";
 const STORAGE_KEY = "remcoTravelPlannerUserData";
 
 const baseTrip = {
@@ -90,7 +95,7 @@ const baseTrip = {
       maps:"https://www.google.com/maps/search/?api=1&query=Sogndalsfj%C3%B8ra",
       note:"Fjord, gletsjers, Molden, Fjærland, Solvorn en Urnes. Actieve start van de reis.",
       facts:["Sognefjord is de langste fjord van Noorwegen.","Molden is een van de mooiste uitzichtwandelingen rond de Lustrafjord.","Urnes Stavkerk staat op UNESCO-werelderfgoedlijst."],
-      tomorrow:"Urnes Stavkerk + Solvorn: rustige fjorddag met ferry, cultuur en koffie aan het water.",
+      tomorrow:"Rustig plan met weinig autorijden: Solvorn + ferry naar Urnes Stavkerk + Bøyabreen als enige gletsjer. Nigardsbreen niet combineren op deze dag; dat wordt te veel autorijden.",
       dist:[["Molden parkeerplaats","±32 km","±35 min"],["Solvorn","±28 km","±30 min"],["Urnes Stavkerk","±40–50 km + ferry","±1u–1u20"],["Bøyabreen","±38 km","±40 min"],["Fjærland","±42 km","±45 min"],["Nigardsbreen","±80 km","±1u15"]],
       activities:[
         {id:"molden",name:"Molden hike",type:"wandelen",prio:"must",status:"todo",time:"3–4 uur",km:"±7 km retour",level:"gemiddeld",drive:"±35 min · ±32 km",near:true,lat:61.347,lon:7.296,
@@ -100,14 +105,23 @@ const baseTrip = {
           desc:"Klein fjorddorpje met houten huizen, haven en rustige sfeer. Logische stop na Molden of voor/na ferry naar Urnes.",
           maps:"https://www.google.com/maps/search/?api=1&query=Solvorn"},
         {id:"urnes",name:"Urnes Stavkerk dagplan",type:"cultuur",prio:"must",status:"plan",time:"halve dag",km:"korte wandeling",level:"makkelijk",drive:"±1u–1u20 incl. ferry",near:false,rain:true,lat:61.299,lon:7.322,
-          desc:"Morgenplan: rij naar Solvorn, neem de ferry naar Ornes/Urnes, bezoek Urnes Stavkerk, wandel kort rond en drink koffie/lunch in Solvorn. Check ferry- en openingstijden vooraf.",
+          desc:"Rustig dagplan: Sogndal → Solvorn, ferry naar Ornes/Urnes, bezoek Urnes Stavkerk, koffie/lunch in Solvorn. Daarna alleen Bøyabreen als korte gletsjerstop als je nog zin hebt. Niet combineren met Nigardsbreen: te veel autorijden.",
           maps:"https://www.google.com/maps/search/?api=1&query=Urnes+Stave+Church",info:"https://www.visitnorway.com/listings/urnes-stave-church/"},
-        {id:"nigardsbreen",name:"Nigardsbreen",type:"wandelen",prio:"must",status:"todo",time:"halve dag",km:"2–5 km",level:"makkelijk tot middel",drive:"±1u15 · ±80 km",lat:61.676,lon:7.228,
+        {id:"urnes_boya_lowdrive",name:"Weinig-rijden dag: Urnes + Solvorn + Bøyabreen",type:"rijden",prio:"must",status:"plan",time:"5–6 uur rustig",km:"korte stops",level:"makkelijk",drive:"±1u50 rijden totaal + ferry",near:false,rain:true,lat:61.36,lon:7.05,
+          desc:"Beste keuze als je één gletsjer wilt, wél Urnes Stavkerk, maar niet de hele dag in de auto. Route: Sogndal → Solvorn → ferry Urnes → Solvorn lunch/koffie → Bøyabreen → Sogndal. Nigardsbreen overslaan op deze dag.",
+          maps:"https://www.google.com/maps/dir/?api=1&origin=Sogndalsfj%C3%B8ra&destination=Sogndalsfj%C3%B8ra&waypoints=Solvorn%7CUrnes+Stave+Church%7CB%C3%B8yabreen"},
+        {id:"nigardsbreen",name:"Nigardsbreen",type:"gletsjer",prio:"must",status:"todo",time:"halve dag",km:"2–5 km",level:"makkelijk tot middel",drive:"±1u15 · ±80 km",lat:61.676,lon:7.228,
           desc:"Spectaculaire gletsjerervaring. Check boot/gids/tijden vooraf. Niet zomaar zelf het ijs op.",
           maps:"https://www.google.com/maps/search/?api=1&query=Nigardsbreen",komoot:"https://www.komoot.com/search/Nigardsbreen",info:"https://www.jostedal.com/"},
-        {id:"boyabreen",name:"Bøyabreen + Fjærland",type:"wandelen",prio:"must",status:"todo",time:"halve dag",km:"±1 km wandelen",level:"makkelijk",drive:"±40 min · ±38 km",near:false,rain:true,lat:61.486,lon:6.756,
+        {id:"boyabreen",name:"Bøyabreen + Fjærland",type:"gletsjer",prio:"must",status:"todo",time:"halve dag",km:"±1 km wandelen",level:"makkelijk",drive:"±40 min · ±38 km",near:false,rain:true,lat:61.486,lon:6.756,
           desc:"Korte gletsjerstop met veel resultaat. Combineer met koffie/lunch en boekwinkels in Fjærland.",
           maps:"https://www.google.com/maps/search/?api=1&query=B%C3%B8yabreen",komoot:"https://www.komoot.com/search/B%C3%B8yabreen"},
+        {id:"supphellebreen",name:"Supphellebreen",type:"gletsjer",prio:"leuk",status:"todo",time:"1–2 uur",km:"korte wandeling",level:"makkelijk",drive:"±45 min · ±45 km",near:false,rain:true,lat:61.471,lon:6.820,
+          desc:"Rustiger gletsjerstop bij Fjærland. Erg mooi te combineren met Bøyabreen en lunch/koffie in Fjærland.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Supphellebreen",komoot:"https://www.komoot.com/search/Supphellebreen"},
+        {id:"boya_supphelle_day",name:"Gletsjerdag Bøyabreen + Supphellebreen + Fjærland",type:"gletsjer",prio:"must",status:"todo",time:"4–6 uur",km:"korte stops",level:"makkelijk",drive:"rondrit ±90 km totaal",near:false,rain:true,lat:61.483,lon:6.790,
+          desc:"Praktische dagroute vanaf Sogndal: Bøyabreen, Supphellebreen, lunch/koffie in Fjærland en rustig terug. Beste keuze als je gletsjergevoel wilt zonder lange dag naar Nigardsbreen.",
+          maps:"https://www.google.com/maps/dir/?api=1&origin=Sogndalsfj%C3%B8ra&destination=Sogndalsfj%C3%B8ra&waypoints=B%C3%B8yabreen%7CSupphellebreen%7CFj%C3%A6rland"},
         {id:"kaupanger",name:"Kaupanger Stavkerk",type:"cultuur",prio:"leuk",status:"todo",time:"1 uur",drive:"±15 min · ±12 km",near:true,rain:true,lat:61.185,lon:7.235,
           desc:"Historische staafkerk dichtbij Sogndal. Goede korte activiteit of regenoptie.",
           maps:"https://www.google.com/maps/search/?api=1&query=Kaupanger+Stave+Church"}
@@ -128,6 +142,9 @@ const baseTrip = {
         {id:"sognefjellet",name:"Sognefjellet scenic route",type:"rijden",prio:"must",status:"todo",time:"halve dag",drive:"±35 min naar route",lat:61.56,lon:8.0,
           desc:"Een van de mooiste bergwegen van Noorwegen. Stop veel, zeker bij helder weer.",
           maps:"https://www.google.com/maps/search/?api=1&query=Sognefjellet",info:"https://www.nasjonaleturistveger.no/en/routes/sognefjellet/"},
+        {id:"juvasshytta",name:"Juvasshytta & Juvassbreen",type:"gletsjer",prio:"must",status:"todo",time:"halve dag",km:"korte wandeling / sneeuwervaring",level:"makkelijk-middel",drive:"±1u10 · ±65 km",lat:61.677,lon:8.368,
+          desc:"Beste gletsjer- en sneeuwervaring later in de week vanuit Skjåk. Ga alleen bij goed zicht; de weg en omgeving zijn hoogalpien.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Juvasshytta+Juvassbreen",komoot:"https://www.komoot.com/search/Juvasshytta%20Juvassbreen"},
         {id:"donfoss",name:"Dønfoss → Gjelbrue / Tundragjelet",type:"wandelen",prio:"must",status:"todo",time:"2–3 uur",level:"middel",drive:"±10–20 min",near:true,lat:61.937,lon:8.238,
           desc:"Rivier, kloof en droog dennenbos. Minder toeristisch dan de bekende fjordstops.",
           maps:"https://www.google.com/maps/search/?api=1&query=D%C3%B8nfoss+Skj%C3%A5k",komoot:"https://www.komoot.com/search/D%C3%B8nfoss%20Gjelbrue"},
@@ -206,7 +223,7 @@ const baseTrip = {
   ]
 };
 
-const typeIcon = {wandelen:"🥾",water:"💧",fiets:"🚴",rijden:"🚗",cultuur:"🏛️",dorp:"🏘️",eten:"🍽️",verblijf:"🏠"};
+const typeIcon = {wandelen:"🥾",gletsjer:"🏔️",water:"💧",fiets:"🚴",rijden:"🚗",cultuur:"🏛️",dorp:"🏘️",eten:"🍽️",verblijf:"🏠"};
 const statusText = {todo:"wil ik doen", plan:"gepland", done:"gedaan", skip:"overslaan"};
 
 let tab = "planner";
@@ -336,7 +353,9 @@ function stayCard(stay){
         <a class="btn" target="_blank" href="${stay.maps}">📍 accommodatie</a>
         <button onclick="copyStayPrompt('${stay.id}')">🤖 vraag GPT over deze regio</button>
       </div>
+      ${nearbyButtons(stay)}
       ${stay.tomorrow ? `<div class="facts"><b>✨ Aanbevolen plan</b><br>${escapeHtml(stay.tomorrow)}</div>` : ""}
+      ${stayDriveStyle(stay)}
       <div class="section">Afstand vanaf accommodatie</div>
       <div class="grid">${(stay.dist||[]).map(d=>`<div class="box"><b>${escapeHtml(d[0])}</b><span>${escapeHtml(d[1])}</span><br><span>${escapeHtml(d[2])}</span></div>`).join("")}</div>
       <div class="facts"><b>💡 Weetjes</b><ul>${(stay.facts||[]).map(f=>`<li>${escapeHtml(f)}</li>`).join("")}</ul></div>
@@ -346,6 +365,59 @@ function stayCard(stay){
       <div class="grid">${(stay.food||[]).map(f=>`<div class="restaurant"><b>${escapeHtml(f[0])}</b><p class="desc">${escapeHtml(f[1])}</p><a class="btn small" target="_blank" href="${f[2]}">📍 Maps</a></div>`).join("")}</div>
     </section>
   `;
+}
+
+
+function nearLink(stay, q){
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q + " near " + stay.address);
+}
+function nearbyButtons(stay){
+  return `
+    <div class="section">Snel zoeken rond accommodatie</div>
+    <div class="links">
+      <a class="btn small" target="_blank" href="${nearLink(stay,'supermarket')}">🛒 winkels</a>
+      <a class="btn small" target="_blank" href="${nearLink(stay,'cafe')}">☕ cafés</a>
+      <a class="btn small" target="_blank" href="${nearLink(stay,'restaurant')}">🍽 restaurants</a>
+      <a class="btn small" target="_blank" href="${nearLink(stay,'EV charging')}">🔌 laadpalen</a>
+      <a class="btn small" target="_blank" href="${nearLink(stay,'gas station')}">⛽ tankstation</a>
+    </div>
+  `;
+}
+
+
+function driveMinutes(a){
+  const s = (a.drive || "").toLowerCase();
+  let max = 0;
+  const hrMatches = [...s.matchAll(/(\d+)\s*u(?:ur)?\s*(\d+)?/g)];
+  hrMatches.forEach(m => { max = Math.max(max, parseInt(m[1])*60 + (m[2]?parseInt(m[2]):0)); });
+  const minMatches = [...s.matchAll(/(\d+)\s*min/g)];
+  minMatches.forEach(m => { max = Math.max(max, parseInt(m[1])); });
+  return max;
+}
+function driveClass(mins){
+  if(!mins) return "good";
+  if(mins <= 30) return "good";
+  if(mins <= 60) return "warn";
+  return "bad";
+}
+function driveLabel(mins){
+  if(!mins) return "rijtijd onbekend";
+  if(mins <= 30) return "past goed bij rustige verblijfsdag";
+  if(mins <= 60) return "kan, maar combineer beperkt";
+  return "lange rit: liever op verplaatsingsdag of als hoofdactiviteit";
+}
+function stayDriveStyle(stay){
+  return `
+    <div class="driveAdvice good">
+      <b>🚗 Reisregel voor verblijfsdagen</b><br>
+      Richtlijn: maximaal ±2 uur rijden totaal per dag. Kies liever 1 hoofdactiviteit + 1 kleine stop. Lange ritten bewaren voor verplaatsingsdagen.
+    </div>
+  `;
+}
+function activityDriveBadge(a){
+  const mins = driveMinutes(a);
+  const cls = driveClass(mins);
+  return `<span class="tag"><span class="driveDot ${cls}"></span>${driveLabel(mins)}</span>`;
 }
 
 function activityCard(a){
@@ -361,7 +433,7 @@ function activityCard(a){
         ${a.rain ? `<span class="tag rain">☔ regenoptie</span>` : ""}
         ${a.routeStop ? `<span class="tag route">🚗 onderwegstop</span>` : ""}
         <span class="tag">${escapeHtml(a.type || "eigen")}</span>
-        ${a.drive ? `<span class="tag">🚗 ${escapeHtml(a.drive)}</span>` : ""}
+        ${a.drive ? `<span class="tag">🚗 ${escapeHtml(a.drive)}</span>` : ""}${activityDriveBadge(a)}
         ${a.time ? `<span class="tag">⏱ ${escapeHtml(a.time)}</span>` : ""}
         ${a.km ? `<span class="tag">📏 ${escapeHtml(a.km)}</span>` : ""}
         ${a.level ? `<span class="tag">🥾 ${escapeHtml(a.level)}</span>` : ""}
@@ -414,7 +486,7 @@ function todayView(){
 }
 
 function routeView(){
-  return `<section class="card"><h2>🚗 Verplaatsingsdagen</h2><p class="note">Gebruik deze dagen niet als pure transportdagen. Zet 1–3 stops vast en hou marge.</p>${(trip().routeDays||[]).map(r=>`
+  return `<section class="card"><h2>🚗 Verplaatsingsdagen</h2><p class="note">Dit zijn de dagen waarop langere autoritten wél logisch zijn. Op gewone verblijfsdagen juist maximaal ±2 uur rijden totaal plannen.</p>${(trip().routeDays||[]).map(r=>`
     <div class="box">
       <b>${escapeHtml(r.title)}</b>
       <p class="desc">${escapeHtml(r.desc)}</p>
@@ -441,7 +513,7 @@ function mapView(){
         <button class="${mapMode==='stay'?'active':''}" onclick="mapMode='stay';render()">🏠 verblijven</button>
       </div>
       <div class="legend">
-        <span>⚫ verblijf</span><span>🟢 wandelen</span><span>🔵 water</span><span>🟠 fiets</span><span>🟣 rijden</span><span>🟤 cultuur</span><span>🟦 dorp</span>
+        <span>⚫ verblijf</span><span>🔷 gletsjer</span><span>🟢 wandelen</span><span>🔵 water</span><span>🟠 fiets</span><span>🟣 rijden</span><span>🟤 cultuur</span><span>🟦 dorp</span>
       </div>
       <div id="map"></div>
     </section>`;
