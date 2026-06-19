@@ -67,6 +67,12 @@
     .topExperience{background:#fff4e6;border:1px solid #ffc078;border-radius:14px;padding:12px;margin:10px 0}
     .changeLog{background:#fbfffc;border:1px solid #cfe3d4;border-radius:12px;padding:10px;margin:8px 0}
 
+
+    .dateInput{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}
+    .dateInput input{width:auto;min-width:155px}
+    .scheduleLine{font-size:12px;color:#365b44;background:#eef7ff;border:1px solid #b8d9f6;border-radius:999px;padding:4px 8px;font-weight:850}
+    .unscheduled{opacity:.82}
+
     .footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}
     @media(max-width:540px){
       main{padding-left:10px;padding-right:10px}.hero h1{font-size:23px}
@@ -87,8 +93,8 @@
    - Nieuwe reizen kunnen via het snelcommando "reisplan".
    ========================================================= */
 
-const APP_VERSION = "definitief-index-2026-06-18-2230-klimapark-route";
-const LAST_UPDATE = "2026-06-18 22:30";
+const APP_VERSION = "definitief-index-2026-06-19-activiteit-datums";
+const LAST_UPDATE = "2026-06-19 13:45";
 const STORAGE_KEY = "remcoTravelPlannerUserData";
 
 const baseTrip = {
@@ -241,9 +247,10 @@ let map = null;
 let markers = [];
 
 const state = loadState();
+state.dates = state.dates || {};
 
 function loadState(){
-  let initial = {done:{},status:{},notes:{},favorites:{},custom:[],tripOverride:null,createdAt:new Date().toISOString()};
+  let initial = {done:{},status:{},notes:{},favorites:{},dates:{},custom:[],tripOverride:null,createdAt:new Date().toISOString()};
   try{
     const v = localStorage.getItem(STORAGE_KEY);
     if(v) return Object.assign(initial, JSON.parse(v));
@@ -295,6 +302,7 @@ function render(){
       ${tabButton("planner","🗺 Planner")}
       ${tabButton("kaart","📍 Kaart")}
       ${tabButton("vandaag","✨ Vandaag")}
+      ${tabButton("schema","📅 Schema")}
       ${tabButton("routes","🚗 Routes")}
       ${tabButton("toevoegen","➕ Toevoegen")}
       ${tabButton("reisplan","⚙️ Reisplan")}
@@ -305,6 +313,7 @@ function render(){
     ${tab === "planner" ? plannerView() :
       tab === "kaart" ? mapView() :
       tab === "vandaag" ? todayView() :
+      tab === "schema" ? schemaView() :
       tab === "routes" ? routeView() :
       tab === "toevoegen" ? addView() :
       tab === "reisplan" ? reisplanView() :
@@ -351,6 +360,7 @@ function stayCard(stay){
     if(filter==="rain") return !!a.rain || a.type==="cultuur" || a.type==="dorp";
     return a.type === filter;
   });
+  list = sortActivitiesForStay(list);
   return `
     <section class="card" id="stay-${stay.id}">
       <div class="head">
@@ -446,6 +456,35 @@ function fixedPlanning(stay){
   `;
 }
 
+
+function activityDate(a){
+  return state.dates[key(a)] || a.date || "";
+}
+function setActivityDateByKey(k, val){
+  state.dates[k] = val;
+  save();
+  render();
+}
+function dateLabel(val){
+  if(!val) return "nog geen datum";
+  const d = new Date(val + "T12:00:00");
+  if(isNaN(d)) return val;
+  return d.toLocaleDateString("nl-NL", {weekday:"short", day:"numeric", month:"short"});
+}
+function sortActivitiesForStay(list){
+  return [...list].sort((a,b)=>{
+    const da = activityDate(a);
+    const db = activityDate(b);
+    if(da && db && da !== db) return da.localeCompare(db);
+    if(da && !db) return -1;
+    if(!da && db) return 1;
+    const pa = a.prio === "must" ? 0 : 1;
+    const pb = b.prio === "must" ? 0 : 1;
+    if(pa !== pb) return pa - pb;
+    return (a.name||"").localeCompare(b.name||"");
+  });
+}
+
 function activityCard(a){
   const k = key(a);
   const status = getStatus(a);
@@ -454,6 +493,11 @@ function activityCard(a){
   return `
     <article class="activity ${status}">
       <h3>${typeIcon[a.type]||"✦"} ${escapeHtml(a.name)} ${fav ? "❤️" : ""}</h3>
+      <div class="dateInput">
+        <span class="scheduleLine">📅 ${dateLabel(activityDate(a))}</span>
+        <input type="date" value="${activityDate(a)}" onchange="setActivityDateByKey('${k}', this.value)">
+        <button class="small" onclick="setActivityDateByKey('${k}','')">wis datum</button>
+      </div>
       <div class="chips">
         <span class="tag ${a.prio==="must"?"must":""}">${a.prio==="must"?"⭐ niet missen":"👍 als er tijd is"}</span>
         ${a.rain ? `<span class="tag rain">☔ regenoptie</span>` : ""}
@@ -507,6 +551,31 @@ function todayView(){
       ${rain.map(activityCard).join("")}
       <div class="section">❤️ Favorieten</div>
       ${favs.length ? favs.map(activityCard).join("") : "<p class='muted'>Nog geen favorieten.</p>"}
+    </section>
+  `;
+}
+
+
+function schemaView(){
+  const t = trip();
+  return `
+    <section class="card">
+      <h2>📅 Schema per accommodatie</h2>
+      <p class="note">De datum staat niet als hoofdindeling bovenaan. Per accommodatie worden activiteiten automatisch op datum gesorteerd. Activiteiten zonder datum staan onderaan.</p>
+      ${t.stays.filter(s=>activeStay==="alle"||activeStay===s.id).map(s=>{
+        let list = [...s.activities, ...state.custom.filter(c=>c.stayId===s.id).map(c=>({...c,custom:true}))].map(a=>({...a,stay:s}));
+        list = sortActivitiesForStay(list);
+        return `<div class="card"><div class="head"><h2>📍 ${escapeHtml(s.label)}</h2><span class="date">${escapeHtml(s.date)}</span></div>
+          ${list.map(a=>{
+            const k = key(a);
+            return `<div class="box ${activityDate(a)?'':'unscheduled'}">
+              <b>${dateLabel(activityDate(a))} · ${escapeHtml(a.name)}</b>
+              <span class="muted">${escapeHtml(a.drive||"")} ${a.time ? " · "+escapeHtml(a.time) : ""}</span>
+              <div class="dateInput"><input type="date" value="${activityDate(a)}" onchange="setActivityDateByKey('${k}', this.value)"><button class="small" onclick="setActivityDateByKey('${k}','')">wis</button></div>
+            </div>`;
+          }).join("")}
+        </div>`;
+      }).join("")}
     </section>
   `;
 }
@@ -706,7 +775,7 @@ function changelogView(){
         <li>Klimapark 2469 / Mimisbrunnr gemarkeerd als vaste planning zondag en topervaring.</li>
         <li>Route vanaf Skjåk Solside naar Klimapark toegevoegd: ±72 km / ±1u10.</li>
         <li>Verplaatsingsdag Sogndal → Skjåk toegevoegd met Sognefjellet, Bakeriet i Lom en Lom Stavkyrkje.</li>
-        <li>Vanaf nu staat de update-datum/tijd zichtbaar bovenin de app.</li>
+        <li>Vanaf nu staat de update-datum/tijd zichtbaar bovenin de app.</li><li>Activiteitsdatum toegevoegd: per activiteit datum invullen en binnen accommodatie sorteren op datum.</li>
       </ul></div>
       <div class="changeLog"><b>Eerder</b><ul>
         <li>Rijstijl toegevoegd: op verblijfsdagen niet de hele dag autorijden.</li>
