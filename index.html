@@ -73,6 +73,11 @@
     .scheduleLine{font-size:12px;color:#365b44;background:#eef7ff;border:1px solid #b8d9f6;border-radius:999px;padding:4px 8px;font-weight:850}
     .unscheduled{opacity:.82}
 
+
+    .checkFilter{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-weight:850;white-space:nowrap}
+    .checkFilter input{width:auto;min-width:auto;margin:0}
+    .checkFilter.active{background:#2d6a4f;color:white;border-color:#2d6a4f}
+
     .footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}
     @media(max-width:540px){
       main{padding-left:10px;padding-right:10px}.hero h1{font-size:23px}
@@ -93,8 +98,8 @@
    - Nieuwe reizen kunnen via het snelcommando "reisplan".
    ========================================================= */
 
-const APP_VERSION = "definitief-index-2026-06-19-activiteit-datums";
-const LAST_UPDATE = "2026-06-19 13:45";
+const APP_VERSION = "definitief-index-2026-06-19-1705-geconsolideerd";
+const LAST_UPDATE = "2026-06-19 17:05";
 const STORAGE_KEY = "remcoTravelPlannerUserData";
 
 const baseTrip = {
@@ -243,6 +248,7 @@ let tab = "planner";
 let filter = "alle";
 let activeStay = "alle";
 let mapMode = "alles";
+let mapFilters = { types:{}, must:false, fav:false, near:false, rain:false, stay:true, openOnly:true };
 let map = null;
 let markers = [];
 
@@ -535,22 +541,37 @@ function toggleFavoriteByKey(k){ state.favorites[k]=!state.favorites[k]; save();
 
 function todayView(){
   const t = trip();
-  const current = t.stays[0]; // simpele default; gebruiker kan zelf filteren op verblijf
-  const favs = allActivities().filter(isFav);
-  const rain = allActivities().filter(a=>a.rain || a.type==="cultuur" || a.type==="dorp").slice(0,8);
-  const near = allActivities().filter(a=>a.near || /±[0-3]?[0-9] min/.test(a.drive||"")).slice(0,8);
+  const todayISO = new Date().toISOString().slice(0,10);
+  const currentStay = activeStay !== "alle" ? t.stays.find(s=>s.id===activeStay) : t.stays.find(s=>/skj/i.test(s.id)) || t.stays[0];
+  const scoped = allActivities().filter(a => !currentStay || a.stay.id === currentStay.id);
+  const open = scoped.filter(a => {
+    const st = getStatus(a);
+    return st !== "done" && st !== "skip";
+  });
+  const plannedToday = open.filter(a => activityDate(a) === todayISO || getStatus(a) === "plan");
+  const near = open.filter(a => !!a.near || /±[0-3]?[0-9] min/.test(a.drive||"")).slice(0,6);
+  const rain = open.filter(a=>a.rain || a.type==="cultuur" || a.type==="dorp").slice(0,6);
+  const favs = open.filter(isFav).slice(0,6);
+
   return `
     <section class="card">
-      <h2>✨ Slimme keuzes</h2>
-      <div class="weatherBox" id="weather-${current.id}">🌦️ Weer laden...</div>
-      <div class="section">Aanbevolen nu</div>
-      <div class="facts">${escapeHtml(current.tomorrow || "Kies op weer, energie en rijtijd.")}</div>
-      <div class="section">📍 Dichtbij</div>
-      ${near.map(activityCard).join("")}
-      <div class="section">☔ Regenplan</div>
-      ${rain.map(activityCard).join("")}
-      <div class="section">❤️ Favorieten</div>
-      ${favs.length ? favs.map(activityCard).join("") : "<p class='muted'>Nog geen favorieten.</p>"}
+      <h2>✨ Vandaag / Nu handig</h2>
+      <div class="filters">
+        <select class="stayFilter" onchange="activeStay=this.value;render()">
+          <option value="alle" ${activeStay==="alle"?"selected":""}>🏠 kies accommodatie</option>
+          ${t.stays.map(s=>`<option value="${s.id}" ${activeStay===s.id?"selected":""}>🏠 ${escapeHtml(s.label)}</option>`).join("")}
+        </select>
+      </div>
+      <p class="note">Toont alleen activiteiten rond de gekozen accommodatie die nog niet gedaan of overgeslagen zijn. Geen oude activiteiten meer uit eerdere stops.</p>
+      <div class="weatherBox" id="weather-${currentStay.id}">🌦️ Weer laden...</div>
+      <div class="section">📅 Gepland / vandaag</div>
+      ${plannedToday.length ? plannedToday.map(activityCard).join("") : "<p class='muted'>Niets vast gepland voor vandaag in deze regio.</p>"}
+      <div class="section">📍 Dichtbij en nog open</div>
+      ${near.length ? near.map(activityCard).join("") : "<p class='muted'>Geen dichtbij-activiteiten open. Kies eventueel een andere accommodatie.</p>"}
+      <div class="section">☔ Regenplan in deze regio</div>
+      ${rain.length ? rain.map(activityCard).join("") : "<p class='muted'>Geen regenopties open in deze regio.</p>"}
+      <div class="section">❤️ Favorieten in deze regio</div>
+      ${favs.length ? favs.map(activityCard).join("") : "<p class='muted'>Geen open favorieten in deze regio.</p>"}
     </section>
   `;
 }
@@ -591,21 +612,27 @@ function routeView(){
 }
 
 function mapView(){
+  const typeButtons = Object.entries(typeIcon).filter(([k])=>!["eten","verblijf"].includes(k)).map(([k,v])=>{
+    const on = !!mapFilters.types[k];
+    return `<label class="checkFilter ${on?'active':''}"><input type="checkbox" ${on?'checked':''} onchange="mapFilters.types['${k}']=this.checked;render()"> ${v} ${k}</label>`;
+  }).join("");
   return `
     <section class="card">
       <h2>📍 Kaart</h2>
+      <p class="note">Je kunt meerdere filters tegelijk aanvinken. Accommodatie-filter beperkt de kaart tot die regio.</p>
       <div class="toolbar">
         <select class="stayFilter" onchange="activeStay=this.value;render()">
           <option value="alle" ${activeStay==="alle"?"selected":""}>🏠 alle accommodaties</option>
           ${trip().stays.map(s=>`<option value="${s.id}" ${activeStay===s.id?"selected":""}>🏠 ${escapeHtml(s.label)}</option>`).join("")}
         </select>
-        <button class="${mapMode==='alles'?'active':''}" onclick="mapMode='alles';render()">alles</button>
-        <button class="${mapMode==='must'?'active':''}" onclick="mapMode='must';render()">⭐ must-do</button>
-        <button class="${mapMode==='fav'?'active':''}" onclick="mapMode='fav';render()">❤️ favoriet</button>
-        <button class="${mapMode==='near'?'active':''}" onclick="mapMode='near';render()">📍 dichtbij</button>
-        <button class="${mapMode==='rain'?'active':''}" onclick="mapMode='rain';render()">☔ regen</button>
-        ${Object.entries(typeIcon).filter(([k])=>!["eten","verblijf"].includes(k)).map(([k,v])=>`<button class="${mapMode===k?'active':''}" onclick="mapMode='${k}';render()">${v} ${k}</button>`).join("")}
-        <button class="${mapMode==='stay'?'active':''}" onclick="mapMode='stay';render()">🏠 verblijven</button>
+        <label class="checkFilter ${mapFilters.stay?'active':''}"><input type="checkbox" ${mapFilters.stay?'checked':''} onchange="mapFilters.stay=this.checked;render()"> 🏠 verblijven</label>
+        <label class="checkFilter ${mapFilters.openOnly?'active':''}"><input type="checkbox" ${mapFilters.openOnly?'checked':''} onchange="mapFilters.openOnly=this.checked;render()"> verberg gedaan/overgeslagen</label>
+        <label class="checkFilter ${mapFilters.must?'active':''}"><input type="checkbox" ${mapFilters.must?'checked':''} onchange="mapFilters.must=this.checked;render()"> ⭐ must-do</label>
+        <label class="checkFilter ${mapFilters.fav?'active':''}"><input type="checkbox" ${mapFilters.fav?'checked':''} onchange="mapFilters.fav=this.checked;render()"> ❤️ favoriet</label>
+        <label class="checkFilter ${mapFilters.near?'active':''}"><input type="checkbox" ${mapFilters.near?'checked':''} onchange="mapFilters.near=this.checked;render()"> 📍 dichtbij</label>
+        <label class="checkFilter ${mapFilters.rain?'active':''}"><input type="checkbox" ${mapFilters.rain?'checked':''} onchange="mapFilters.rain=this.checked;render()"> ☔ regen</label>
+        ${typeButtons}
+        <button onclick="resetMapFilters()">reset kaartfilters</button>
       </div>
       <div class="legend">
         <span>⚫ verblijf</span><span>🔷 gletsjer</span><span>🟢 wandelen</span><span>🔵 water</span><span>🟠 fiets</span><span>🟣 rijden</span><span>🟤 cultuur</span><span>🟦 dorp</span>
@@ -613,14 +640,22 @@ function mapView(){
       <div id="map"></div>
     </section>`;
 }
+function anyTypeSelected(){
+  return Object.values(mapFilters.types || {}).some(Boolean);
+}
 function mapActivityPasses(a){
-  if(mapMode==="alles") return true;
-  if(mapMode==="must") return a.prio==="must";
-  if(mapMode==="fav") return isFav(a);
-  if(mapMode==="near") return !!a.near || /±[0-3]?[0-9] min/.test(a.drive||"");
-  if(mapMode==="rain") return !!a.rain || a.type==="cultuur" || a.type==="dorp";
-  if(mapMode==="stay") return false;
-  return a.type === mapMode;
+  const st = getStatus(a);
+  if(mapFilters.openOnly && (st === "done" || st === "skip")) return false;
+  if(mapFilters.must && a.prio !== "must") return false;
+  if(mapFilters.fav && !isFav(a)) return false;
+  if(mapFilters.near && !(!!a.near || /±[0-3]?[0-9] min/.test(a.drive||""))) return false;
+  if(mapFilters.rain && !(!!a.rain || a.type==="cultuur" || a.type==="dorp")) return false;
+  if(anyTypeSelected() && !mapFilters.types[a.type]) return false;
+  return true;
+}
+function resetMapFilters(){
+  mapFilters = { types:{}, must:false, fav:false, near:false, rain:false, stay:true, openOnly:true };
+  render();
 }
 function initMap(){
   if(!window.L) {
@@ -633,11 +668,11 @@ function initMap(){
 
   const pts = [];
   trip().stays.filter(s=>activeStay==="alle"||activeStay===s.id).forEach(s=>{
-    if(mapMode==="alles" || mapMode==="stay"){
+    if(mapFilters.stay){
       addMarker(s.lat,s.lon,"verblijf",`🏠 ${s.label}`, `<b>${s.label}</b><br>${s.base}<br><a target="_blank" href="${s.maps}">Maps</a>`);
       pts.push([s.lat,s.lon]);
     }
-    if(mapMode!=="stay"){
+    if(true){
       [...s.activities, ...state.custom.filter(c=>c.stayId===s.id).map(c=>({...c,custom:true,stay:s}))].forEach(a=>{
         if(!a.lat || !a.lon) return;
         const withStay = {...a,stay:s};
@@ -771,15 +806,18 @@ function changelogView(){
   return `
     <section class="card">
       <h2>📋 Laatste wijzigingen</h2>
-      <div class="changeLog"><b>2026-06-18 22:30</b><ul>
-        <li>Klimapark 2469 / Mimisbrunnr gemarkeerd als vaste planning zondag en topervaring.</li>
-        <li>Route vanaf Skjåk Solside naar Klimapark toegevoegd: ±72 km / ±1u10.</li>
-        <li>Verplaatsingsdag Sogndal → Skjåk toegevoegd met Sognefjellet, Bakeriet i Lom en Lom Stavkyrkje.</li>
-        <li>Vanaf nu staat de update-datum/tijd zichtbaar bovenin de app.</li><li>Activiteitsdatum toegevoegd: per activiteit datum invullen en binnen accommodatie sorteren op datum.</li>
+      <div class="changeLog"><b>2026-06-19 17:05</b><ul>
+        <li>Alles geconsolideerd in één index.html.</li>
+        <li>Meerdere kaartfilters tegelijk: accommodatie + type + must-do + favoriet + dichtbij + regen.</li>
+        <li>Vandaag-tab opgeschoond: alleen gekozen accommodatie, niet-gedaan en niet-overgeslagen.</li>
+        <li>Schema-tab behouden: datum per activiteit en sortering per accommodatie.</li>
+        <li>Klimapark 2469 / Mimisbrunnr als vaste planning zondag en topervaring.</li>
+        <li>Verplaatsingsdag Sogndal → Skjåk met Sognefjellet, Bakeriet i Lom en Lom Stavkyrkje.</li>
+        <li>Gletsjercategorie, winkels/cafés/restaurants rond accommodatie en rijtijdindicaties.</li>
       </ul></div>
       <div class="changeLog"><b>Eerder</b><ul>
         <li>Rijstijl toegevoegd: op verblijfsdagen niet de hele dag autorijden.</li>
-        <li>Gletsjercategorie, winkels/cafés/restaurants rond accommodatie en rijtijdindicaties toegevoegd.</li>
+        <li>Backup, favorieten, status, notities en GPT-vragen behouden.</li>
       </ul></div>
     </section>
   `;
