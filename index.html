@@ -78,6 +78,11 @@
     .checkFilter input{width:auto;min-width:auto;margin:0}
     .checkFilter.active{background:#2d6a4f;color:white;border-color:#2d6a4f}
 
+
+    .activityImg{width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid #d7eadb;margin:8px 0;background:#e8f5e9}
+    .mapBig #map{height:78vh;min-height:540px}
+    .aiBox{background:#f7fbff;border:1px solid #bad6f5;border-radius:14px;padding:12px;margin:10px 0}
+
     .footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}
     @media(max-width:540px){
       main{padding-left:10px;padding-right:10px}.hero h1{font-size:23px}
@@ -98,8 +103,8 @@
    - Nieuwe reizen kunnen via het snelcommando "reisplan".
    ========================================================= */
 
-const APP_VERSION = "definitief-index-2026-06-19-1705-geconsolideerd";
-const LAST_UPDATE = "2026-06-19 17:05";
+const APP_VERSION = "definitief-index-2026-06-20-0915-skjak-planning-verrijk";
+const LAST_UPDATE = "2026-06-20 09:15";
 const STORAGE_KEY = "remcoTravelPlannerUserData";
 
 const baseTrip = {
@@ -160,15 +165,21 @@ const baseTrip = {
         {id:"sognefjellet",name:"Sognefjellet scenic route",type:"rijden",prio:"must",status:"todo",time:"halve dag",drive:"±35 min naar route",lat:61.56,lon:8.0,
           desc:"Een van de mooiste bergwegen van Noorwegen. Stop veel, zeker bij helder weer.",
           maps:"https://www.google.com/maps/search/?api=1&query=Sognefjellet",info:"https://www.nasjonaleturistveger.no/en/routes/sognefjellet/"},
-        {id:"klimapark2469",name:"Klimapark 2469 / Mimisbrunnr",type:"gletsjer",prio:"must",status:"plan",time:"zondag · tour ±3 uur",km:"begeleide ijstunnel",level:"makkelijk-middel",drive:"±1u10 · ±72 km",lat:61.677,lon:8.368,
+        {id:"klimapark2469",date:"2026-06-21",name:"Klimapark 2469 / Mimisbrunnr",type:"gletsjer",prio:"must",status:"plan",time:"zondag · tour ±3 uur",km:"begeleide ijstunnel",level:"makkelijk-middel",drive:"±1u10 · ±72 km",lat:61.677,lon:8.368,
           desc:"Topervaring van de reis. Ticket geboekt. Begeleide tocht naar Mimisbrunnr/ijstunnel bij Juvasshytta. Warm aankleden: hoogalpien gebied op ca. 1840 m. Vertrek ruim op tijd vanaf Skjåk Solside.",
           maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&destination=Klimapark+2469+Juvasshytta",komoot:"https://www.komoot.com/search/Juvasshytta%20Juvassbreen"},
-        {id:"donfoss",name:"Dønfoss → Gjelbrue / Tundragjelet",type:"wandelen",prio:"must",status:"todo",time:"2–3 uur",level:"middel",drive:"±10–20 min",near:true,lat:61.937,lon:8.238,
+        {id:"donfoss",date:"2026-06-22",name:"Dønfoss → Gjelbrue / Tundragjelet",type:"wandelen",prio:"must",status:"todo",time:"2–3 uur",level:"middel",drive:"±10–20 min",near:true,lat:61.937,lon:8.238,
           desc:"Rivier, kloof en droog dennenbos. Minder toeristisch dan de bekende fjordstops.",
           maps:"https://www.google.com/maps/search/?api=1&query=D%C3%B8nfoss+Skj%C3%A5k",komoot:"https://www.komoot.com/search/D%C3%B8nfoss%20Gjelbrue"},
-        {id:"lom",name:"Lom Stavkyrkje + bakkerij",type:"cultuur",prio:"must",status:"todo",time:"1–2 uur",drive:"±20 min",near:true,rain:true,lat:61.837,lon:8.568,
+        {id:"lom",date:"2026-06-20",name:"Lom Stavkyrkje + bakkerij",type:"cultuur",prio:"must",status:"todo",time:"1–2 uur",drive:"±20 min",near:true,rain:true,lat:61.837,lon:8.568,
           desc:"Sterke combinatie: historische staafkerk, dorpje Lom en goede koffiestop.",
           maps:"https://www.google.com/maps/search/?api=1&query=Lom+Stave+Church"},
+        {id:"tronoberget",date:"2026-06-20",name:"Tronoberget",type:"wandelen",prio:"leuk",status:"plan",time:"1–2 uur",km:"korte wandeling",level:"makkelijk-gemiddeld",drive:"±15–20 min · ±12–15 km",near:true,rain:false,lat:61.90,lon:8.30,
+          desc:"Rustige uitzichtactiviteit vanuit Skjåk, ideaal als combinatie met Lom en Bakeriet i Lom. Geen hoofddoel voor een hele dag, wel mooi als korte avond- of namiddagwandeling.",
+          maps:"https://www.google.com/maps/search/?api=1&query=Tronoberget+Skj%C3%A5k+Norway",komoot:"https://www.komoot.com/search/Tronoberget%20Skj%C3%A5k"},
+        {id:"lom_tronoberget_day",date:"2026-06-20",name:"Rustige dag: Lom + Bakeriet + Tronoberget",type:"rijden",prio:"must",status:"plan",time:"halve dag rustig",km:"korte stops",level:"makkelijk",drive:"weinig rijden totaal",near:true,rain:true,lat:61.84,lon:8.56,
+          desc:"Planning zaterdag 20 juni: rustig naar Lom, koffie/lunch bij Bakeriet i Lom, eventueel Lom Stavkyrkje/centrum, en Tronoberget als korte uitzichtactiviteit. Past goed als rustige dag vóór Klimapark.",
+          maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&destination=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&waypoints=Bakeriet+i+Lom%7CLom+Stavkyrkje%7CTronoberget+Skj%C3%A5k"},
         {id:"sota",name:"Sota Sæter / Breheimen",type:"wandelen",prio:"leuk",status:"todo",time:"halve dag",level:"middel",drive:"±45 min",lat:61.888,lon:7.768,
           desc:"Rustiger berggebied. Neem kaart/water mee; minder voorzieningen onderweg.",
           maps:"https://www.google.com/maps/search/?api=1&query=Sota+S%C3%A6ter",komoot:"https://www.komoot.com/search/Sota%20S%C3%A6ter"}
@@ -491,6 +502,49 @@ function sortActivitiesForStay(list){
   });
 }
 
+
+function routeFromStay(a){
+  const origin = encodeURIComponent(a.stay?.address || a.stay?.base || "");
+  const dest = encodeURIComponent(a.name + " Norway");
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}`;
+}
+function routeFromCurrent(a){
+  const dest = encodeURIComponent(a.name + " Norway");
+  return `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+}
+function imageUrl(a){
+  const q = encodeURIComponent(a.imageQuery || (a.name + " Norway landscape"));
+  return `https://source.unsplash.com/800x450/?${q}`;
+}
+function uniqueByKey(list){
+  const seen = new Set();
+  return list.filter(a => { const k = key(a); if(seen.has(k)) return false; seen.add(k); return true; });
+}
+function parseActivityText(txt, stayId){
+  const lines = txt.split(/\n/).map(x=>x.trim()).filter(Boolean);
+  const get = (labels) => {
+    for(const lab of labels){ const re = new RegExp("^"+lab+"\\s*[:\\-]\\s*(.+)$","i"); const m=lines.find(l=>re.test(l)); if(m) return m.match(re)[1].trim(); }
+    return "";
+  };
+  const first = lines[0] || "Nieuwe activiteit";
+  const name = get(["naam","activiteit","title"]) || first.replace(/^[-*]\s*/,"").slice(0,80);
+  const raw=(get(["categorie","type"])+" "+name).toLowerCase();
+  let type="wandelen";
+  if(/glets|ijs|sneeuw/.test(raw)) type="gletsjer"; else if(/fiets/.test(raw)) type="fiets"; else if(/water|fjord|meer|boot/.test(raw)) type="water"; else if(/kerk|museum|cultuur|stav/.test(raw)) type="cultuur"; else if(/dorp|stad|centrum|lom/.test(raw)) type="dorp"; else if(/route|rijden|auto/.test(raw)) type="rijden";
+  const desc = get(["omschrijving","beschrijving","desc"]) || lines.slice(1,5).join(" ").slice(0,350) || "Verrijkte eigen activiteit.";
+  const drive = get(["reistijd","afstand","rijtijd","afstand vanaf accommodatie"]) || "aanvullen";
+  const time = get(["duur","tijd"]) || "";
+  const km = get(["lengte","wandeling","afstand wandeling"]) || "";
+  const level = get(["moeilijkheid","niveau"]) || "";
+  const maps = get(["google maps","maps","google"]) || ("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name + " Norway"));
+  const komoot = get(["komoot"]) || ("https://www.komoot.com/search/" + encodeURIComponent(name));
+  return {id:"custom_"+Date.now(),custom:true,stayId,name,type,prio:/must|niet missen|top|⭐⭐⭐⭐/.test(txt.toLowerCase())?"must":"leuk",status:"todo",time,km,level,drive,desc,maps,komoot,lat:null,lon:null,imageQuery:name+" Norway"};
+}
+function enrichPromptForName(name, stayId){
+  const s = trip().stays.find(x=>x.id===stayId) || trip().stays[0];
+  return `Werk deze activiteit uit voor mijn reisplanner en geef het antwoord als compacte sleutel-waarde lijst zodat ik het in de app kan plakken.\n\nActiviteit: ${name}\nVerblijf: ${s.label}\nAccommodatie: ${s.base}\nAdres: ${s.address}\n\nGebruik deze velden exact:\nNaam:\nCategorie:\nOmschrijving:\nAfstand:\nReistijd:\nDuur:\nLengte:\nMoeilijkheid:\nGoogle Maps:\nKomoot:\nBeste tijdstip:\nRestaurant/koffie:\nRegenalternatief:\nBeoordeling:\nCoördinaten:\nAfbeelding zoekterm:`;
+}
+
 function activityCard(a){
   const k = key(a);
   const status = getStatus(a);
@@ -514,6 +568,7 @@ function activityCard(a){
         ${a.km ? `<span class="tag">📏 ${escapeHtml(a.km)}</span>` : ""}
         ${a.level ? `<span class="tag">🥾 ${escapeHtml(a.level)}</span>` : ""}
       </div>
+      <img class="activityImg" loading="lazy" src="${imageUrl(a)}" alt="">
       <p class="desc">${escapeHtml(a.desc || "")}</p>
       <div class="statusbar">
         ${statusButton(a,"todo","wil ik doen")}
@@ -524,7 +579,7 @@ function activityCard(a){
       <div class="links">
         ${a.maps ? `<a class="btn small" target="_blank" href="${a.maps}">📍 Maps</a>` : ""}
         ${a.komoot ? `<a class="btn small" target="_blank" href="${a.komoot}">🧭 Komoot</a>` : ""}
-        ${a.info ? `<a class="btn small" target="_blank" href="${a.info}">🌐 Info</a>` : ""}
+        ${a.info ? `<a class="btn small" target="_blank" href="${a.info}">🌐 Info</a>` : ""}<a class="btn small" target="_blank" href="${routeFromStay(a)}">🚗 route vanaf verblijf</a><a class="btn small" target="_blank" href="${routeFromCurrent(a)}">🧭 route vanaf hier</a>
         <button class="small" onclick="toggleFavoriteByKey('${k}')">${fav ? "❤️ favoriet" : "🤍 favoriet"}</button>
         <button class="small" onclick="copyActivityPrompt('${k}')">🤖 vraag GPT</button>
         ${a.custom ? `<button class="small" onclick="editCustom('${a.id}')">✏️ wijzig</button><button class="small danger" onclick="removeCustom('${a.id}')">verwijder</button>` : ""}
@@ -543,7 +598,7 @@ function todayView(){
   const t = trip();
   const todayISO = new Date().toISOString().slice(0,10);
   const currentStay = activeStay !== "alle" ? t.stays.find(s=>s.id===activeStay) : t.stays.find(s=>/skj/i.test(s.id)) || t.stays[0];
-  const scoped = allActivities().filter(a => !currentStay || a.stay.id === currentStay.id);
+  const scoped = uniqueByKey(allActivities().filter(a => !currentStay || a.stay.id === currentStay.id));
   const open = scoped.filter(a => {
     const st = getStatus(a);
     return st !== "done" && st !== "skip";
@@ -617,7 +672,7 @@ function mapView(){
     return `<label class="checkFilter ${on?'active':''}"><input type="checkbox" ${on?'checked':''} onchange="mapFilters.types['${k}']=this.checked;render()"> ${v} ${k}</label>`;
   }).join("");
   return `
-    <section class="card">
+    <section class="card mapBig">
       <h2>📍 Kaart</h2>
       <p class="note">Je kunt meerdere filters tegelijk aanvinken. Accommodatie-filter beperkt de kaart tot die regio.</p>
       <div class="toolbar">
@@ -633,9 +688,6 @@ function mapView(){
         <label class="checkFilter ${mapFilters.rain?'active':''}"><input type="checkbox" ${mapFilters.rain?'checked':''} onchange="mapFilters.rain=this.checked;render()"> ☔ regen</label>
         ${typeButtons}
         <button onclick="resetMapFilters()">reset kaartfilters</button>
-      </div>
-      <div class="legend">
-        <span>⚫ verblijf</span><span>🔷 gletsjer</span><span>🟢 wandelen</span><span>🔵 water</span><span>🟠 fiets</span><span>🟣 rijden</span><span>🟤 cultuur</span><span>🟦 dorp</span>
       </div>
       <div id="map"></div>
     </section>`;
@@ -702,7 +754,22 @@ function addView(){
   return `
     <section class="card">
       <h2>➕ Zelf activiteit toevoegen</h2>
-      <p class="note">Voeg iets toe dat je onderweg ziet. De app maakt alvast Maps- en Komoot-links. Gebruik daarna “vraag GPT” voor extra info.</p>
+      <p class="note">Plak één GPT-antwoordblok. De app knipt naam, categorie, reistijd, duur, moeilijkheid, Maps en Komoot automatisch op.</p>
+      <div class="aiBox">
+        <label>GPT-antwoord plakken</label>
+        <textarea id="aiPaste" placeholder="Plak hier bijv. het GPT-antwoord voor Tronoberget..."></textarea>
+        <div class="links">
+          <select id="aiStay">${trip().stays.map(s=>`<option value="${s.id}">${s.label}</option>`).join("")}</select>
+          <button onclick="addFromAiPaste()">✨ Plak & maak activiteit</button>
+        </div>
+      </div>
+      <div class="aiBox">
+        <label>Alleen naam invullen en GPT-vraag kopiëren</label>
+        <input id="enrichName" placeholder="bijv. Tronoberget">
+        <select id="enrichStay">${trip().stays.map(s=>`<option value="${s.id}">${s.label}</option>`).join("")}</select>
+        <button onclick="copyText(enrichPromptForName(document.getElementById('enrichName').value || 'Nieuwe activiteit', document.getElementById('enrichStay').value))">🤖 kopieer GPT-vraag</button>
+      </div>
+      <div class="section">Handmatig toevoegen</div>
       <div class="form grid">
         <label>Verblijf<select id="addStay">${trip().stays.map(s=>`<option value="${s.id}">${s.label}</option>`).join("")}</select></label>
         <label>Naam<input id="addName" placeholder="bijv. Feigefossen"/></label>
@@ -715,6 +782,13 @@ function addView(){
       <button class="primary" onclick="addCustom()">Toevoegen</button>
     </section>
   `;
+}
+function addFromAiPaste(){
+  const txt = document.getElementById("aiPaste").value.trim();
+  const stayId = document.getElementById("aiStay").value;
+  if(!txt) return alert("Plak eerst de activiteitinfo.");
+  state.custom.push(parseActivityText(txt, stayId));
+  save(); tab="planner"; render();
 }
 function addCustom(){
   const name = document.getElementById("addName").value.trim();
@@ -805,7 +879,7 @@ function copyReisplanPrompt(){
 function changelogView(){
   return `
     <section class="card">
-      <h2>📋 Laatste wijzigingen</h2>
+      <h2>📋 Laatste wijzigingen</h2><div class="changeLog"><b>2026-06-20 09:15</b><ul><li>Planning Skjåk toegevoegd: 20 juni Lom + Tronoberget, 21 juni Klimapark, 22 juni Dønfoss.</li><li>AI-plakfunctie toegevoegd: GPT-antwoord plakken en automatisch activiteit aanmaken.</li><li>Routes per activiteit toegevoegd: vanaf accommodatie en vanaf huidige locatie.</li><li>Afbeeldingen per activiteit toegevoegd en kaart ruimer gemaakt; kleurenlegenda weggehaald.</li></ul></div>
       <div class="changeLog"><b>2026-06-19 17:05</b><ul>
         <li>Alles geconsolideerd in één index.html.</li>
         <li>Meerdere kaartfilters tegelijk: accommodatie + type + must-do + favoriet + dichtbij + regen.</li>
