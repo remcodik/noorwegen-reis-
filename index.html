@@ -83,6 +83,11 @@
     .mapBig #map{height:78vh;min-height:540px}
     .aiBox{background:#f7fbff;border:1px solid #bad6f5;border-radius:14px;padding:12px;margin:10px 0}
 
+
+    .visibilityToggle{background:#fff;border:1px solid #cfe3d4;border-radius:12px;padding:9px;margin:8px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .visibilityToggle input{width:auto;min-width:auto}
+    .eveningBox{background:#fff8f5;border:1px solid #e8c8a8;border-radius:14px;padding:12px;margin:10px 0}
+
     .footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}
     @media(max-width:540px){
       main{padding-left:10px;padding-right:10px}.hero h1{font-size:23px}
@@ -103,8 +108,8 @@
    - Nieuwe reizen kunnen via het snelcommando "reisplan".
    ========================================================= */
 
-const APP_VERSION = "definitief-index-2026-06-20-0915-skjak-planning-verrijk";
-const LAST_UPDATE = "2026-06-20 09:15";
+const APP_VERSION = "definitief-index-2026-06-20-1015-skjak799-restaurants-filter";
+const LAST_UPDATE = "2026-06-20 10:15";
 const STORAGE_KEY = "remcoTravelPlannerUserData";
 
 const baseTrip = {
@@ -155,8 +160,8 @@ const baseTrip = {
       ]
     },
     {
-      id:"skjak", label:"Skjåk", date:"19–23 jun", base:"Skjåk Solside", address:"Skjåk Solside, Skjåk", lat:61.883, lon:8.266,
-      maps:"https://www.google.com/maps/search/?api=1&query=Skj%C3%A5k+Solside",
+      id:"skjak", label:"Skjåk", date:"19–23 jun", base:"Skjåk Solside 799", address:"Skjåk Solside 799, 2690 Skjåk, Innlandet, Norway", lat:61.883, lon:8.266,
+      maps:"https://www.google.com/maps/search/?api=1&query=Skj%C3%A5k+Solside+799+2690+Skj%C3%A5k",
       note:"Droog bergdal tussen Breheimen, Reinheimen en Jotunheimen. Goed voor autoroutes, kloofwandelingen en Lom.",
       facts:["Skjåk is opvallend droog voor Noorwegen.","Lom ligt dichtbij en is ideaal voor koffie, bakkerij en staafkerk.","Sognefjellet is een verplaatsingsdag die voelt als excursie."],
       tomorrow:"Vrijdag: verplaatsingsdag via Sognefjellet, Bakeriet i Lom en Lom Stavkyrkje. Zaterdag rustig plannen; zondag staat Klimapark/Mimisbrunnr vast geboekt.",
@@ -166,8 +171,8 @@ const baseTrip = {
           desc:"Een van de mooiste bergwegen van Noorwegen. Stop veel, zeker bij helder weer.",
           maps:"https://www.google.com/maps/search/?api=1&query=Sognefjellet",info:"https://www.nasjonaleturistveger.no/en/routes/sognefjellet/"},
         {id:"klimapark2469",date:"2026-06-21",name:"Klimapark 2469 / Mimisbrunnr",type:"gletsjer",prio:"must",status:"plan",time:"zondag · tour ±3 uur",km:"begeleide ijstunnel",level:"makkelijk-middel",drive:"±1u10 · ±72 km",lat:61.677,lon:8.368,
-          desc:"Topervaring van de reis. Ticket geboekt. Begeleide tocht naar Mimisbrunnr/ijstunnel bij Juvasshytta. Warm aankleden: hoogalpien gebied op ca. 1840 m. Vertrek ruim op tijd vanaf Skjåk Solside.",
-          maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&destination=Klimapark+2469+Juvasshytta",komoot:"https://www.komoot.com/search/Juvasshytta%20Juvassbreen"},
+          desc:"Topervaring van de reis. Ticket geboekt. Begeleide tocht naar Mimisbrunnr/ijstunnel bij Juvasshytta. Warm aankleden: hoogalpien gebied op ca. 1840 m. Vertrek ruim op tijd vanaf Skjåk Solside 799 799.",
+          maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+799+2690+Skj%C3%A5k&destination=Klimapark+2469+Juvasshytta",komoot:"https://www.komoot.com/search/Juvasshytta%20Juvassbreen"},
         {id:"donfoss",date:"2026-06-22",name:"Dønfoss → Gjelbrue / Tundragjelet",type:"wandelen",prio:"must",status:"todo",time:"2–3 uur",level:"middel",drive:"±10–20 min",near:true,lat:61.937,lon:8.238,
           desc:"Rivier, kloof en droog dennenbos. Minder toeristisch dan de bekende fjordstops.",
           maps:"https://www.google.com/maps/search/?api=1&query=D%C3%B8nfoss+Skj%C3%A5k",komoot:"https://www.komoot.com/search/D%C3%B8nfoss%20Gjelbrue"},
@@ -179,7 +184,7 @@ const baseTrip = {
           maps:"https://www.google.com/maps/search/?api=1&query=Tronoberget+Skj%C3%A5k+Norway",komoot:"https://www.komoot.com/search/Tronoberget%20Skj%C3%A5k"},
         {id:"lom_tronoberget_day",date:"2026-06-20",name:"Rustige dag: Lom + Bakeriet + Tronoberget",type:"rijden",prio:"must",status:"plan",time:"halve dag rustig",km:"korte stops",level:"makkelijk",drive:"weinig rijden totaal",near:true,rain:true,lat:61.84,lon:8.56,
           desc:"Planning zaterdag 20 juni: rustig naar Lom, koffie/lunch bij Bakeriet i Lom, eventueel Lom Stavkyrkje/centrum, en Tronoberget als korte uitzichtactiviteit. Past goed als rustige dag vóór Klimapark.",
-          maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&destination=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&waypoints=Bakeriet+i+Lom%7CLom+Stavkyrkje%7CTronoberget+Skj%C3%A5k"},
+          maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+799+2690+Skj%C3%A5k&destination=Skj%C3%A5k+Solside+799+2690+Skj%C3%A5k&waypoints=Bakeriet+i+Lom%7CLom+Stavkyrkje%7CTronoberget+Skj%C3%A5k"},
         {id:"sota",name:"Sota Sæter / Breheimen",type:"wandelen",prio:"leuk",status:"todo",time:"halve dag",level:"middel",drive:"±45 min",lat:61.888,lon:7.768,
           desc:"Rustiger berggebied. Neem kaart/water mee; minder voorzieningen onderweg.",
           maps:"https://www.google.com/maps/search/?api=1&query=Sota+S%C3%A6ter",komoot:"https://www.komoot.com/search/Sota%20S%C3%A6ter"}
@@ -246,7 +251,7 @@ const baseTrip = {
     }
   ],
   routeDays:[
-    {title:"Vrijdag 19 juni · Sogndal → Skjåk", desc:"Aanbevolen verplaatsingsdag: Sogndal → Sognefjellet uitzichtpunten → lunch bij Bakeriet i Lom → Lom Stavkyrkje → Skjåk Solside. Rijtijd zonder stops ca. 3u30–4u; met lunch en korte stops ontspannen dag.", maps:"https://www.google.com/maps/dir/?api=1&origin=Sogndalsfj%C3%B8ra&destination=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&waypoints=Sognefjellet%7CBakeriet+i+Lom%7CLom+Stavkyrkje"},
+    {title:"Vrijdag 19 juni · Sogndal → Skjåk", desc:"Aanbevolen verplaatsingsdag: Sogndal → Sognefjellet uitzichtpunten → lunch bij Bakeriet i Lom → Lom Stavkyrkje → Skjåk Solside. Rijtijd zonder stops ca. 3u30–4u; met lunch en korte stops ontspannen dag.", maps:"https://www.google.com/maps/dir/?api=1&origin=Sogndalsfj%C3%B8ra&destination=Skj%C3%A5k+Solside+799+2690+Skj%C3%A5k&waypoints=Sognefjellet%7CBakeriet+i+Lom%7CLom+Stavkyrkje"},
     {title:"Skjåk → Valdres", desc:"Rustige overgangsdag. Check of je via mooie fjellwegen wilt rijden.", maps:"https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside&destination=F%C3%B8rs%C3%B8ddin+30+2920+Nord-Aurdal"},
     {title:"Valdres → Gjerstad", desc:"Langere rijdag. Plan lunchstop en neem niet te veel activiteit ernaast.", maps:"https://www.google.com/maps/dir/?api=1&origin=F%C3%B8rs%C3%B8ddin+30+2920+Nord-Aurdal&destination=L%C3%B8yteveien+14+4980+Gjerstad"}
   ]
@@ -260,6 +265,7 @@ let filter = "alle";
 let activeStay = "alle";
 let mapMode = "alles";
 let mapFilters = { types:{}, must:false, fav:false, near:false, rain:false, stay:true, openOnly:true };
+let showDoneSkipped = false;
 let map = null;
 let markers = [];
 
@@ -350,6 +356,9 @@ function plannerView(){
   return `
     <div class="route warning">💾 <b>Tip:</b> maak een backup vóór je een nieuwe <code>index.html</code> uploadt.</div>
     <div class="route">🗺️ <b>Route:</b> ${escapeHtml(t.route || "")}</div>
+    <div class="visibilityToggle">
+      <label><input type="checkbox" ${showDoneSkipped?'checked':''} onchange="showDoneSkipped=this.checked;render()"> toon gedaan/overgeslagen</label>
+    </div>
     <div class="filters">
       <select class="stayFilter" onchange="activeStay=this.value;render()">
         <option value="alle" ${activeStay==="alle"?"selected":""}>🏠 alle accommodaties</option>
@@ -370,6 +379,7 @@ function filterButton(id,label){ return `<button class="${filter===id?'active':'
 function stayCard(stay){
   let list = [...stay.activities, ...state.custom.filter(c=>c.stayId===stay.id).map(c=>({...c,custom:true}))].map(a=>({...a,stay}));
   list = list.filter(a => {
+    if(!showDoneSkipped && ["done","skip"].includes(getStatus(a))) return false;
     if(filter==="alle") return true;
     if(filter==="must") return a.prio==="must";
     if(filter==="fav") return isFav(a);
@@ -391,11 +401,10 @@ function stayCard(stay){
         <button onclick="copyStayPrompt('${stay.id}')">🤖 vraag GPT over deze regio</button>
       </div>
       ${nearbyButtons(stay)}
+      ${dinnerSuggestions(stay)}
       ${stay.tomorrow ? `<div class="facts"><b>✨ Aanbevolen plan</b><br>${escapeHtml(stay.tomorrow)}</div>` : ""}
       ${fixedPlanning(stay)}
       ${stayDriveStyle(stay)}
-      <div class="section">Afstand vanaf accommodatie</div>
-      <div class="grid">${(stay.dist||[]).map(d=>`<div class="box"><b>${escapeHtml(d[0])}</b><span>${escapeHtml(d[1])}</span><br><span>${escapeHtml(d[2])}</span></div>`).join("")}</div>
       <div class="facts"><b>💡 Weetjes</b><ul>${(stay.facts||[]).map(f=>`<li>${escapeHtml(f)}</li>`).join("")}</ul></div>
       <div class="section">Activiteiten (${list.length})</div>
       ${list.length ? list.map(activityCard).join("") : `<p class="muted">Geen activiteiten voor dit filter.</p>`}
@@ -417,7 +426,6 @@ function nearbyButtons(stay){
       <a class="btn small" target="_blank" href="${nearLink(stay,'cafe')}">☕ cafés</a>
       <a class="btn small" target="_blank" href="${nearLink(stay,'restaurant')}">🍽 restaurants</a>
       <a class="btn small" target="_blank" href="${nearLink(stay,'EV charging')}">🔌 laadpalen</a>
-      <a class="btn small" target="_blank" href="${nearLink(stay,'gas station')}">⛽ tankstation</a>
     </div>
   `;
 }
@@ -464,9 +472,9 @@ function fixedPlanning(stay){
   return `
     <div class="topExperience">
       <b>🎟️ Vast gepland zondag: Klimapark 2469 / Mimisbrunnr</b><br>
-      Route vanaf Skjåk Solside: ±72 km · ±1u10. Begeleide ijstunnel/ijs-archeologie bij Juvasshytta. Warm aankleden en ruim op tijd vertrekken.
+      Route vanaf Skjåk Solside 799 799: ±72 km · ±1u10. Begeleide ijstunnel/ijs-archeologie bij Juvasshytta. Warm aankleden en ruim op tijd vertrekken.
       <div class="links" style="margin-top:8px">
-        <a class="btn small" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+2690+Skj%C3%A5k&destination=Klimapark+2469+Juvasshytta">📍 route naar Klimapark</a>
+        <a class="btn small" target="_blank" href="https://www.google.com/maps/dir/?api=1&origin=Skj%C3%A5k+Solside+799+2690+Skj%C3%A5k&destination=Klimapark+2469+Juvasshytta">📍 route naar Klimapark</a>
         <a class="btn small" target="_blank" href="https://klimapark2469.no/">🌐 Klimapark info</a>
       </div>
     </div>
@@ -543,6 +551,38 @@ function parseActivityText(txt, stayId){
 function enrichPromptForName(name, stayId){
   const s = trip().stays.find(x=>x.id===stayId) || trip().stays[0];
   return `Werk deze activiteit uit voor mijn reisplanner en geef het antwoord als compacte sleutel-waarde lijst zodat ik het in de app kan plakken.\n\nActiviteit: ${name}\nVerblijf: ${s.label}\nAccommodatie: ${s.base}\nAdres: ${s.address}\n\nGebruik deze velden exact:\nNaam:\nCategorie:\nOmschrijving:\nAfstand:\nReistijd:\nDuur:\nLengte:\nMoeilijkheid:\nGoogle Maps:\nKomoot:\nBeste tijdstip:\nRestaurant/koffie:\nRegenalternatief:\nBeoordeling:\nCoördinaten:\nAfbeelding zoekterm:`;
+}
+
+
+function dinnerSuggestions(stay){
+  const data = {
+    sogndal: [
+      ["Dampskipskaien","Mooie ligging aan het water; handig voor koffie of avondeten.","https://www.google.com/maps/search/?api=1&query=Dampskipskaien+Sogndal"],
+      ["Restauranthuset Malin","Praktische keuze in Sogndal voor diner.","https://www.google.com/maps/search/?api=1&query=Restauranthuset+Malin+Sogndal"]
+    ],
+    skjak: [
+      ["Bakeriet i Lom","Beste lunch/koffiestop; ook handig vroeg op de dag.","https://www.google.com/maps/search/?api=1&query=Bakeriet+i+Lom"],
+      ["Fossheim Hotel","Goede avondoptie in Lom met lokale keuken.","https://www.google.com/maps/search/?api=1&query=Fossheim+Hotel+Lom"],
+      ["BrimiBue","Fijn restaurant in Lom; check opening/reserveren.","https://www.google.com/maps/search/?api=1&query=BrimiBue+Lom"],
+      ["Lom centrum restaurants","Gebruik dit als brede avondeten-zoeklink rond Lom.","https://www.google.com/maps/search/?api=1&query=restaurant+Lom+Norway"]
+    ],
+    valdres: [
+      ["Danebu Kongsgaard","Sterke dineroptie met lokale sfeer.","https://www.google.com/maps/search/?api=1&query=Danebu+Kongsgaard"],
+      ["Fagernes restaurants","Praktische brede zoeklink voor avondeten.","https://www.google.com/maps/search/?api=1&query=restaurant+Fagernes"]
+    ],
+    gjerstad: [
+      ["Risør haven","Meest sfeervolle avondoptie aan de kust.","https://www.google.com/maps/search/?api=1&query=Ris%C3%B8r+havn+restaurant"],
+      ["Brokelandheia","Praktisch bij E18 als snelle optie.","https://www.google.com/maps/search/?api=1&query=Brokelandheia+restaurant"]
+    ]
+  };
+  const list = data[stay.id] || [];
+  if(!list.length) return "";
+  return `
+    <div class="section">🍽️ Avondeten suggesties</div>
+    <div class="grid">
+      ${list.map(r=>`<div class="eveningBox"><b>${r[0]}</b><p class="desc">${r[1]}</p><a class="btn small" target="_blank" href="${r[2]}">📍 Maps</a></div>`).join("")}
+    </div>
+  `;
 }
 
 function activityCard(a){
@@ -879,7 +919,7 @@ function copyReisplanPrompt(){
 function changelogView(){
   return `
     <section class="card">
-      <h2>📋 Laatste wijzigingen</h2><div class="changeLog"><b>2026-06-20 09:15</b><ul><li>Planning Skjåk toegevoegd: 20 juni Lom + Tronoberget, 21 juni Klimapark, 22 juni Dønfoss.</li><li>AI-plakfunctie toegevoegd: GPT-antwoord plakken en automatisch activiteit aanmaken.</li><li>Routes per activiteit toegevoegd: vanaf accommodatie en vanaf huidige locatie.</li><li>Afbeeldingen per activiteit toegevoegd en kaart ruimer gemaakt; kleurenlegenda weggehaald.</li></ul></div>
+      <h2>📋 Laatste wijzigingen</h2><div class="changeLog"><b>2026-06-20 10:15</b><ul><li>Adres Skjåk aangepast naar Skjåk Solside 799 in routes en Maps-links.</li><li>Filter toegevoegd: gedaan/overgeslagen standaard verborgen, optioneel zichtbaar.</li><li>Tankstationknop verwijderd; laadpalen blijft.</li><li>Afstandenoverzicht per accommodatie verwijderd; afstand blijft bij activiteit staan.</li><li>Avondeten-suggesties per accommodatie toegevoegd.</li><li>Planning Skjåk toegevoegd: 20 juni Lom + Tronoberget, 21 juni Klimapark, 22 juni Dønfoss.</li><li>AI-plakfunctie toegevoegd: GPT-antwoord plakken en automatisch activiteit aanmaken.</li><li>Routes per activiteit toegevoegd: vanaf accommodatie en vanaf huidige locatie.</li><li>Afbeeldingen per activiteit toegevoegd en kaart ruimer gemaakt; kleurenlegenda weggehaald.</li></ul></div>
       <div class="changeLog"><b>2026-06-19 17:05</b><ul>
         <li>Alles geconsolideerd in één index.html.</li>
         <li>Meerdere kaartfilters tegelijk: accommodatie + type + must-do + favoriet + dichtbij + regen.</li>
