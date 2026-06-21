@@ -88,6 +88,15 @@
     .visibilityToggle input{width:auto;min-width:auto}
     .eveningBox{background:#fff8f5;border:1px solid #e8c8a8;border-radius:14px;padding:12px;margin:10px 0}
 
+
+    .planningDay{background:#fff;border:1px solid #d7eadb;border-left:7px solid #2d6a4f;border-radius:14px;padding:12px;margin:10px 0}
+    .planningItem{display:flex;gap:8px;align-items:flex-start;background:#f8fbf8;border:1px solid #d4e8d4;border-radius:12px;padding:9px;margin:7px 0}
+    .dayBadge{min-width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:950;background:#2d6a4f}
+    .pinPlan{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:950;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+    .color-sogndal{background:#2d6a4f!important}.color-skjak{background:#1565c0!important}.color-valdres{background:#ef6c00!important}.color-gjerstad{background:#6a1b9a!important}.color-default{background:#64748b!important}
+    .planningMap #map{height:78vh;min-height:540px}
+    .miniMeta{font-size:12px;color:#607466;line-height:1.4}
+
     .footer{text-align:center;color:#78937f;font-size:12px;margin-top:26px}
     @media(max-width:540px){
       main{padding-left:10px;padding-right:10px}.hero h1{font-size:23px}
@@ -108,8 +117,8 @@
    - Nieuwe reizen kunnen via het snelcommando "reisplan".
    ========================================================= */
 
-const APP_VERSION = "definitief-index-2026-06-20-1015-skjak799-restaurants-filter";
-const LAST_UPDATE = "2026-06-20 10:15";
+const APP_VERSION = "definitief-index-2026-06-20-1130-planningkaart";
+const LAST_UPDATE = "2026-06-20 11:30";
 const STORAGE_KEY = "remcoTravelPlannerUserData";
 
 const baseTrip = {
@@ -326,6 +335,8 @@ function render(){
       ${tabButton("kaart","📍 Kaart")}
       ${tabButton("vandaag","✨ Vandaag")}
       ${tabButton("schema","📅 Schema")}
+      ${tabButton("reisplanning","🗓 Reisplanning")}
+      ${tabButton("planningkaart","🧭 Planningkaart")}
       ${tabButton("routes","🚗 Routes")}
       ${tabButton("toevoegen","➕ Toevoegen")}
       ${tabButton("reisplan","⚙️ Reisplan")}
@@ -337,6 +348,8 @@ function render(){
       tab === "kaart" ? mapView() :
       tab === "vandaag" ? todayView() :
       tab === "schema" ? schemaView() :
+      tab === "reisplanning" ? planningView() :
+      tab === "planningkaart" ? planningMapView() :
       tab === "routes" ? routeView() :
       tab === "toevoegen" ? addView() :
       tab === "reisplan" ? reisplanView() :
@@ -347,6 +360,7 @@ function render(){
     <div class="footer">Gegevens blijven lokaal op je iPhone bewaard. Maak backup vóór je een nieuwe versie uploadt.</div>
   `;
   if(tab === "kaart") setTimeout(initMap, 350);
+  if(tab === "planningkaart") setTimeout(initPlanningMap, 350);
   if(tab === "planner" || tab === "vandaag") loadWeather();
 }
 function tabButton(id,label){ return `<button class="${tab===id?'active':''}" onclick="tab='${id}';render()">${label}</button>`; }
@@ -585,6 +599,46 @@ function dinnerSuggestions(stay){
   `;
 }
 
+
+function stayColorClass(stayId){
+  if(stayId==="sogndal") return "color-sogndal";
+  if(stayId==="skjak") return "color-skjak";
+  if(stayId==="valdres") return "color-valdres";
+  if(stayId==="gjerstad") return "color-gjerstad";
+  return "color-default";
+}
+function uniqueByKeySafe(list){
+  const seen = new Set();
+  return list.filter(a => { const k = key(a); if(seen.has(k)) return false; seen.add(k); return true; });
+}
+function plannedActivities(){
+  return uniqueByKeySafe(allActivities()).filter(a => activityDate(a)).sort((a,b)=>{
+    const d = activityDate(a).localeCompare(activityDate(b));
+    if(d !== 0) return d;
+    return (a.stay?.label || "").localeCompare(b.stay?.label || "") || (a.name||"").localeCompare(b.name||"");
+  });
+}
+function dayNumberFor(date){
+  const dates = [...new Set(plannedActivities().map(activityDate))].sort();
+  const idx = dates.indexOf(date);
+  return idx >= 0 ? idx + 1 : "";
+}
+function updateExistingFromAiPaste(k, txt){
+  const acts = allActivities();
+  const a = acts.find(x => key(x) === k);
+  if(!a) return alert("Activiteit niet gevonden.");
+  if(!txt.trim()) return alert("Plak eerst de GPT-info.");
+  if(a.custom && typeof parseActivityText === "function"){
+    const parsed = parseActivityText(txt, a.stay.id);
+    const c = state.custom.find(x => x.id === a.id);
+    if(c) Object.assign(c, parsed, {id:a.id, stayId:a.stay.id, custom:true});
+  } else {
+    state.notes[k] = (state.notes[k] || "") + "\n\nVerrijking:\n" + txt;
+  }
+  save();
+  render();
+}
+
 function activityCard(a){
   const k = key(a);
   const status = getStatus(a);
@@ -624,6 +678,10 @@ function activityCard(a){
         <button class="small" onclick="copyActivityPrompt('${k}')">🤖 vraag GPT</button>
         ${a.custom ? `<button class="small" onclick="editCustom('${a.id}')">✏️ wijzig</button><button class="small danger" onclick="removeCustom('${a.id}')">verwijder</button>` : ""}
       </div>
+      <details class="aiBox"><summary>✨ GPT-info plakken voor deze activiteit</summary>
+        <textarea id="enrich_${k}" placeholder="Plak hier het compacte GPT-antwoord..."></textarea>
+        <button onclick="updateExistingFromAiPaste('${k}', document.getElementById('enrich_${k}').value)">importeer info</button>
+      </details>
       <textarea class="notes" placeholder="Eigen notitie bij deze activiteit..." oninput="state.notes['${k}']=this.value;save()">${escapeHtml(note)}</textarea>
     </article>
   `;
@@ -694,6 +752,81 @@ function schemaView(){
       }).join("")}
     </section>
   `;
+}
+
+
+function planningView(){
+  const acts = plannedActivities().filter(a => showDoneSkipped || !["skip"].includes(getStatus(a)));
+  const byDate = {};
+  acts.forEach(a => { const d = activityDate(a); byDate[d] = byDate[d] || []; byDate[d].push(a); });
+  const dates = Object.keys(byDate).sort();
+  return `
+    <section class="card">
+      <h2>🗓 Reisplanning</h2>
+      <p class="note">Duidelijke dagvolgorde. Activiteiten blijven gekoppeld aan hun accommodatie, maar staan hier op datum.</p>
+      <div class="visibilityToggle">
+        <label><input type="checkbox" ${showDoneSkipped?'checked':''} onchange="showDoneSkipped=this.checked;render()"> toon overgeslagen/gedaan</label>
+      </div>
+      ${dates.length ? dates.map(d=>{
+        const nr = dayNumberFor(d);
+        return `<div class="planningDay"><div class="head"><h2><span class="dayBadge">${nr}</span> ${dateLabel(d)}</h2></div>
+          ${byDate[d].map(a=>`<div class="planningItem">
+            <div class="dayBadge ${stayColorClass(a.stay.id)}">${nr}</div>
+            <div style="flex:1">
+              <b>${typeIcon[a.type]||"📍"} ${escapeHtml(a.name)}</b>
+              <div class="miniMeta">📍 ${escapeHtml(a.stay.label)} · ${escapeHtml(a.drive||"")} ${a.time ? "· "+escapeHtml(a.time) : ""}</div>
+              <div class="links" style="margin-top:6px">
+                ${a.maps ? `<a class="btn small" target="_blank" href="${a.maps}">Maps</a>` : ""}
+                <button class="small" onclick="setStatusByKey('${key(a)}','done')">gedaan</button>
+                <button class="small" onclick="setStatusByKey('${key(a)}','skip')">overslaan</button>
+              </div>
+            </div>
+          </div>`).join("")}
+        </div>`;
+      }).join("") : "<p class='muted'>Nog geen activiteiten met datum. Zet een datum bij activiteiten in Planner of Schema.</p>"}
+    </section>
+  `;
+}
+function planningMapView(){
+  return `
+    <section class="card planningMap">
+      <h2>🧭 Planningkaart</h2>
+      <p class="note">Kleur = accommodatie. Nummer = volgorde van de dag in je planning. Accommodaties staan als huis-pin.</p>
+      <div class="toolbar">
+        <select class="stayFilter" onchange="activeStay=this.value;render()">
+          <option value="alle" ${activeStay==="alle"?"selected":""}>🏠 alle accommodaties</option>
+          ${trip().stays.map(s=>`<option value="${s.id}" ${activeStay===s.id?"selected":""}>🏠 ${escapeHtml(s.label)}</option>`).join("")}
+        </select>
+        <label class="checkFilter ${showDoneSkipped?'active':''}"><input type="checkbox" ${showDoneSkipped?'checked':''} onchange="showDoneSkipped=this.checked;render()"> toon gedaan/overgeslagen</label>
+      </div>
+      <div id="map"></div>
+    </section>`;
+}
+function initPlanningMap(){
+  if(!window.L) {
+    document.getElementById("map").innerHTML = "<p style='padding:18px'>Kaartbibliotheek kon niet laden.</p>";
+    return;
+  }
+  if(map) { map.remove(); map=null; markers=[]; }
+  map = L.map("map", {scrollWheelZoom:false});
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:18, attribution:"© OpenStreetMap"}).addTo(map);
+  const pts = [];
+  const stays = trip().stays.filter(s=>activeStay==="alle"||activeStay===s.id);
+  stays.forEach(s=>{
+    if(s.lat && s.lon){
+      const icon = L.divIcon({className:"",html:`<div class="pinPlan ${stayColorClass(s.id)}">🏠</div>`,iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-14]});
+      L.marker([s.lat,s.lon],{icon}).addTo(map).bindPopup(`<b>${s.label}</b><br>${s.base}<br><a target="_blank" href="${s.maps}">Maps</a>`);
+      pts.push([s.lat,s.lon]);
+    }
+  });
+  plannedActivities().filter(a => activeStay==="alle" || a.stay.id===activeStay).filter(a => showDoneSkipped || !["skip"].includes(getStatus(a))).forEach(a=>{
+    if(!a.lat || !a.lon) return;
+    const nr = dayNumberFor(activityDate(a));
+    const icon = L.divIcon({className:"",html:`<div class="pinPlan ${stayColorClass(a.stay.id)}">${nr}</div>`,iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-14]});
+    L.marker([a.lat,a.lon],{icon}).addTo(map).bindPopup(`<b>${dateLabel(activityDate(a))} · ${a.name}</b><br>${a.stay.label}<br>${a.drive||""}<br><a target="_blank" href="${a.maps||routeFromStay(a)}">Maps</a>`);
+    pts.push([a.lat,a.lon]);
+  });
+  if(pts.length) map.fitBounds(pts,{padding:[28,28]}); else map.setView([61.2,7.1],7);
 }
 
 function routeView(){
@@ -919,7 +1052,7 @@ function copyReisplanPrompt(){
 function changelogView(){
   return `
     <section class="card">
-      <h2>📋 Laatste wijzigingen</h2><div class="changeLog"><b>2026-06-20 10:15</b><ul><li>Adres Skjåk aangepast naar Skjåk Solside 799 in routes en Maps-links.</li><li>Filter toegevoegd: gedaan/overgeslagen standaard verborgen, optioneel zichtbaar.</li><li>Tankstationknop verwijderd; laadpalen blijft.</li><li>Afstandenoverzicht per accommodatie verwijderd; afstand blijft bij activiteit staan.</li><li>Avondeten-suggesties per accommodatie toegevoegd.</li><li>Planning Skjåk toegevoegd: 20 juni Lom + Tronoberget, 21 juni Klimapark, 22 juni Dønfoss.</li><li>AI-plakfunctie toegevoegd: GPT-antwoord plakken en automatisch activiteit aanmaken.</li><li>Routes per activiteit toegevoegd: vanaf accommodatie en vanaf huidige locatie.</li><li>Afbeeldingen per activiteit toegevoegd en kaart ruimer gemaakt; kleurenlegenda weggehaald.</li></ul></div>
+      <h2>📋 Laatste wijzigingen</h2><div class="changeLog"><b>2026-06-20 11:30</b><ul><li>Reisplanning-tab toegevoegd: dagen op datum, gekoppeld aan accommodatie.</li><li>Planningkaart toegevoegd: kleur per accommodatie en nummer per plandag.</li><li>Per activiteit kun je GPT-info plakken om activiteit bij te werken.</li><li>Adres Skjåk aangepast naar Skjåk Solside 799 in routes en Maps-links.</li><li>Filter toegevoegd: gedaan/overgeslagen standaard verborgen, optioneel zichtbaar.</li><li>Tankstationknop verwijderd; laadpalen blijft.</li><li>Afstandenoverzicht per accommodatie verwijderd; afstand blijft bij activiteit staan.</li><li>Avondeten-suggesties per accommodatie toegevoegd.</li><li>Planning Skjåk toegevoegd: 20 juni Lom + Tronoberget, 21 juni Klimapark, 22 juni Dønfoss.</li><li>AI-plakfunctie toegevoegd: GPT-antwoord plakken en automatisch activiteit aanmaken.</li><li>Routes per activiteit toegevoegd: vanaf accommodatie en vanaf huidige locatie.</li><li>Afbeeldingen per activiteit toegevoegd en kaart ruimer gemaakt; kleurenlegenda weggehaald.</li></ul></div>
       <div class="changeLog"><b>2026-06-19 17:05</b><ul>
         <li>Alles geconsolideerd in één index.html.</li>
         <li>Meerdere kaartfilters tegelijk: accommodatie + type + must-do + favoriet + dichtbij + regen.</li>
