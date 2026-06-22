@@ -12,8 +12,8 @@
 </style>
 </head><body><main id="app"></main>
 <script>
-const APP_VERSION="reisplanner-2.2-2026-06-22-1430-praktijk";
-const LAST_UPDATE="2026-06-22 14:30";
+const APP_VERSION="reisplanner-2.2.1-2026-06-22-1500-fix";
+const LAST_UPDATE="2026-06-22 15:00";
 const STORE="remcoTravelPlannerUserDataV2";
 const todayISO=()=>new Date().toISOString().slice(0,10);
 const enc=s=>encodeURIComponent(s||"");
@@ -22,6 +22,14 @@ const mapsRoute=(o,d)=>`https://www.google.com/maps/dir/?api=1&origin=${enc(o)}&
 const mapsRouteWay=(o,d,w)=>`https://www.google.com/maps/dir/?api=1&origin=${enc(o)}&destination=${enc(d)}&waypoints=${enc(w.join('|'))}`;
 const menuSearch=q=>`https://www.google.com/search?q=${enc(q+' menu website')}`;
 const H="https://www.google.com/maps/search/?api=1&query=";
+
+const COORDS={
+  molden:[61.333,7.313], solvorn:[61.293,7.244], urnes:[61.298,7.323], boyabreen:[61.483,6.813], supphellebreen:[61.456,6.762], nigardsbreen:[61.676,7.209],
+  lom_centre:[61.837,8.568], bakeriet:[61.837,8.567], lom_stav:[61.837,8.568], vegaskjelet:[61.839,8.569], tronoberget:[61.895,8.286], klimapark:[61.677,8.367], donfoss:[61.928,8.083], gjelbrue:[61.920,8.070], sognefjellet:[61.564,8.000],
+  besseggen:[61.492,8.810], bygdin:[61.370,8.813], mjolkevegen:[61.100,9.000], valdresmuseum:[60.986,9.242], syndin:[61.115,8.892], danebu:[60.954,9.420], smak_valdres:[60.985,9.236],
+  solhomfjell:[58.970,8.995], risor:[58.720,9.234], tvedestrand:[58.622,8.930], ferry_krs:[58.145,7.989], kolding_stop:[55.490,9.472]
+};
+
 const trip={title:"🇳🇴 Noorwegen Zomerreis 2026 (15–30 juni)",stays:[
 {id:"sogndal",label:"Sogndal",date:"16–19 juni",base:"Årøyvegen 202",address:"Årøyvegen 202, 6857 Sogndal, Norway",lat:61.219,lon:7.158,color:"c-sogndal",facts:["Uitvalsbasis voor Lustrafjord, Urnes, Molden en gletsjers.","Fjorddagen worden mooier als je niet te veel in één dag propt."],tips:["Urnes + Solvorn is rustiger dan Nigardsbreen combineren.","Bøyabreen geeft veel gletsjergevoel voor weinig extra rijtijd."],food:[r("Dampskipskaien","Aan het water; koffie/lunch/avond.","Dampskipskaien Sogndal"),r("Restauranthuset Malin","Praktische dineroptie in Sogndal.","Restauranthuset Malin Sogndal")]},
 {id:"skjak",label:"Skjåk",date:"19–23 juni",base:"Skjåk Solside 799",address:"Skjåk Solside 799, 2690 Skjåk, Innlandet, Norway",lat:61.913,lon:8.275,color:"c-skjak",facts:["Skjåk is een droog bergdal en handig voor Lom, Dønfoss en Juvasshytta.","Lom is de beste plek voor koffie, lunch en avondeten in de buurt."],tips:["Zaterdag rustig: Lom/Bakeriet/Stavkerk.","Zondag Klimapark: ruim op tijd vertrekken; hoogalpien gebied."],food:[r("Bakeriet i Lom","Beste koffie/lunchstop; vaak druk maar de moeite.","Bakeriet i Lom"),r("Fossheim Hotel","Goede avondoptie in Lom met lokale keuken.","Fossheim Hotel Lom"),r("BrimiBue","Fijn restaurant in Lom; vooraf opening checken.","BrimiBue Lom"),r("Lom centrum restaurants","Brede zoeklink voor avondeten in Lom.","restaurant Lom Norway")]},
@@ -75,12 +83,6 @@ const ACT_LABELS={
   solhomfjell:["local"], risor:["local"], tvedestrand:["local"], ferry_krs:["short"], kolding_stop:["short"]
 };
 function labelHtml(a){let labs=ACT_LABELS[a.id]||[];let txt={local:"⭐ lokaal",popular:"🔥 highlight",rain:"☔ regen",short:"⚡ korte stop"};let cls={local:"local",popular:"hot",rain:"rain",short:"stop"};return labs.map(l=>`<span class="pill ${cls[l]}">${txt[l]}</span>`).join("");}
-const COORDS={
-  molden:[61.333,7.313], solvorn:[61.293,7.244], urnes:[61.298,7.323], boyabreen:[61.483,6.813], supphellebreen:[61.456,6.762], nigardsbreen:[61.676,7.209],
-  lom_centre:[61.837,8.568], bakeriet:[61.837,8.567], lom_stav:[61.837,8.568], vegaskjelet:[61.839,8.569], tronoberget:[61.895,8.286], klimapark:[61.677,8.367], donfoss:[61.928,8.083], gjelbrue:[61.920,8.070], sognefjellet:[61.564,8.000],
-  besseggen:[61.492,8.810], bygdin:[61.370,8.813], mjolkevegen:[61.100,9.000], valdresmuseum:[60.986,9.242], syndin:[61.115,8.892], danebu:[60.954,9.420], smak_valdres:[60.985,9.236],
-  solhomfjell:[58.970,8.995], risor:[58.720,9.234], tvedestrand:[58.622,8.930], ferry_krs:[58.145,7.989], kolding_stop:[55.490,9.472]
-};
 
 function r(name,desc,q){return {name,desc,maps:mapsSearch(q),menu:menuSearch(q)}}
 function act(id,stayId,name,type,prio,status,date,order,drive,time,km,level,desc,q,kq){let c=COORDS[id]||[];return {id,stayId,name,type,prio,status,date,order,drive,time,km,level,desc,maps:mapsSearch(q),komoot:`https://www.komoot.com/search/${enc(kq||q)}`,lat:c[0]||null,lon:c[1]||null}}
