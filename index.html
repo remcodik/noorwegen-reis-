@@ -32,15 +32,15 @@
 .routeHero{background:linear-gradient(180deg,#ffffff,#eef7f7);border:1px solid var(--line);border-radius:18px;padding:12px;margin:10px 0;box-shadow:0 4px 18px rgba(11,37,69,.06)}
 .routeHero h2{margin:0 0 4px;font-size:17px}
 .routeHero .muted{font-size:12px}
-.routeMapMini{height:310px;border-radius:16px;overflow:hidden;border:1px solid var(--line);margin-top:9px}
+.routeMapMini{height:330px;border-radius:16px;overflow:hidden;border:1px solid var(--line);margin-top:9px}
 .routeLegend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
 .routeLegend span{background:white;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-weight:800}
 
 </style>
 </head><body><main id="app"></main>
 <script>
-const APP_VERSION="reisplanner-2.4.1-2026-06-24-routekaart";
-const LAST_UPDATE="2026-06-24 18:00";
+const APP_VERSION="reisplanner-2.4.2-2026-06-25-route-correctie";
+const LAST_UPDATE="2026-06-25 18:10";
 const STORE="remcoTravelPlannerUserDataV2";
 const todayISO=()=>new Date().toISOString().slice(0,10);
 const enc=s=>encodeURIComponent(s||"");
@@ -226,34 +226,62 @@ function initRouteMap(){if(!window.L||!document.getElementById('routeMap'))retur
 
 
 const TRIP_ROUTE=[
-  {name:"Nijmegen",lat:51.842,lon:5.852,type:"home"},
-  {name:"Ferry naar Bergen",lat:53.545,lon:8.580,type:"ferry"},
-  {name:"Bergen",lat:60.392,lon:5.322,type:"ferry"},
-  {name:"Sogndal",lat:61.229,lon:7.101,type:"stay"},
-  {name:"Skjåk",lat:61.883,lon:8.266,type:"stay"},
-  {name:"Valdres",lat:60.986,lon:9.236,type:"stay"},
-  {name:"Gjerstad",lat:58.880,lon:9.020,type:"stay"},
-  {name:"Kristiansand",lat:58.145,lon:7.989,type:"ferry"},
-  {name:"Kolding",lat:55.490,lon:9.472,type:"stay"},
-  {name:"Nijmegen",lat:51.842,lon:5.852,type:"home"}
+  {name:"Nijmegen",lat:51.8426,lon:5.8518,type:"stay"},
+  {name:"Hirtshals",lat:57.5881,lon:9.9592,type:"transfer"},
+  {name:"Stavanger",lat:58.9700,lon:5.7331,type:"transfer"},
+  {name:"Bergen",lat:60.3925,lon:5.3221,type:"transfer"},
+  {name:"Sogndal",lat:61.2296,lon:7.1018,type:"stay"},
+  {name:"Skjåk Solside",lat:61.8830,lon:8.2660,type:"stay"},
+  {name:"Valdres / Leira",lat:60.9860,lon:9.2360,type:"stay"},
+  {name:"Gjerstad",lat:58.8800,lon:9.0200,type:"stay"},
+  {name:"Kristiansand",lat:58.1467,lon:7.9956,type:"transfer"},
+  {name:"Hirtshals",lat:57.5881,lon:9.9592,type:"transfer"},
+  {name:"Kolding",lat:55.4904,lon:9.4722,type:"stay"},
+  {name:"Nijmegen",lat:51.8426,lon:5.8518,type:"stay"}
+];
+const ROUTE_SEGMENTS=[
+  {from:0,to:1,mode:"road"},
+  {from:1,to:2,mode:"ferry"},
+  {from:2,to:3,mode:"ferry"},
+  {from:3,to:4,mode:"road"},
+  {from:4,to:5,mode:"road"},
+  {from:5,to:6,mode:"road"},
+  {from:6,to:7,mode:"road"},
+  {from:7,to:8,mode:"road"},
+  {from:8,to:9,mode:"ferry"},
+  {from:9,to:10,mode:"road"},
+  {from:10,to:11,mode:"road"}
 ];
 function routeHero(){
-  return `<section class="routeHero"><h2>🗺️ Reisroute</h2><div class="muted">15 juni – 30 juni · Nijmegen → Noorwegen → Kolding → Nijmegen</div><div id="routeMapMini" class="routeMapMini"></div><div class="routeLegend"><span>🏠 start/eind</span><span>⛴ ferry</span><span>📍 verblijf</span></div></section>`;
+  return `<section class="routeHero"><h2>🗺️ Reisroute</h2><div class="muted">Nijmegen → Hirtshals → Stavanger → Bergen → Noorwegen rondreis → Kristiansand → Hirtshals → Kolding → Nijmegen</div><div id="routeMapMini" class="routeMapMini"></div><div class="routeLegend"><span>🔴 overnachting/start</span><span>⚪ ferry/overstap</span><span>━━ weg</span><span>⋯ ferry</span></div></section>`;
+}
+function drawTripRoute(targetMap,pointsArr){
+  let pts=pointsArr||[];
+  ROUTE_SEGMENTS.forEach(seg=>{
+    let a=TRIP_ROUTE[seg.from],b=TRIP_ROUTE[seg.to];
+    let opts=seg.mode==="ferry"?{weight:3,opacity:.9,dashArray:"3 9"}:{weight:4,opacity:.85};
+    L.polyline([[a.lat,a.lon],[b.lat,b.lon]],opts).addTo(targetMap);
+    pts.push([a.lat,a.lon],[b.lat,b.lon]);
+  });
+}
+function routeMarkerHtml(p){
+  if(p.type==="transfer"){
+    return `<div style="width:11px;height:11px;background:white;border:2px solid #256f6f;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.35)"></div>`;
+  }
+  return `<div style="width:16px;height:16px;background:#e7283f;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.35)"></div>`;
 }
 function initRouteMini(){
   if(typeof window==='undefined'||!window.L||!document.getElementById('routeMapMini'))return;
   let m=L.map('routeMapMini',{scrollWheelZoom:false,zoomControl:false,attributionControl:false});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(m);
-  let latlngs=TRIP_ROUTE.map(p=>[p.lat,p.lon]);
-  L.polyline(latlngs,{weight:4,opacity:.85}).addTo(m);
+  let pts=[];
+  drawTripRoute(m,pts);
   TRIP_ROUTE.forEach((p,i)=>{
-    let icon=p.type==='home'?'🏠':p.type==='ferry'?'⛴':'📍';
-    let marker=L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:`<div style="background:white;border:2px solid #256f6f;border-radius:999px;padding:3px 6px;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.2)">${icon}</div>`})}).addTo(m);
-    marker.bindPopup(`<b>${i+1}. ${p.name}</b>`);
+    let marker=L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:routeMarkerHtml(p),iconSize:[20,20],iconAnchor:[10,10]})}).addTo(m);
+    marker.bindPopup(`<b>${i+1}. ${p.name}</b><br>${p.type==="transfer"?"Ferry/overstap":"Overnachting/start"}`);
   });
-  m.fitBounds(latlngs,{padding:[22,22]});
+  m.fitBounds(pts,{padding:[18,18]});
 }
-
 function render(){let app=document.getElementById('app');app.innerHTML=`<section class="hero"><h1>🇳🇴 Noorwegen Zomerreis 2026</h1><div class="version">15–30 juni · laatste update ${LAST_UPDATE}</div></section><nav class="tabs">${tb('planning','Planning')}${tb('map','Kaart')}${tb('stays','Verblijven')}${tb('add','Toevoegen')}${tb('more','Meer')}</nav>${tab==='planning'?planningView():tab==='map'?mapView():tab==='stays'?staysView():tab==='add'?addView():moreView()}<div class="footer">Gegevens blijven lokaal op je iPhone bewaard. Maak backup vóór uploaden.</div>`; if(tab==='map')setTimeout(initMap,250); if(tab==='planning')setTimeout(initRouteMini,250); if(tab==='planning')setTimeout(initRouteMap,250)}
 function tb(id,l){return `<button class="${tab===id?'active':''}" onclick="tab='${id}';render()">${l}</button>`}
 function stayFilter(){return `<div class="filtersRow"><select onchange="activeStay=this.value;render()"><option value="all" ${activeStay==='all'?'selected':''}>Alle accommodaties</option>${trip.stays.map(s=>`<option value="${s.id}" ${activeStay===s.id?'selected':''}>${s.label}</option>`).join('')}</select></div>`}
@@ -277,7 +305,7 @@ function planningView(){let m=groupedPlanning();let days=travelDays().filter(d=>
 function dayBlock(d,list,meta){let dn=dayNo(d);let stay=st(meta?.stayId)||{label:meta?.title||'',color:'c-default'};return `<div class="day"><div class="dayHead"><h2><span class="badge ${stay.color}">D${dn}</span> ${dateLbl(d)} <span class="muted small">· ${e(meta?.title||stay.label)}</span></h2><span class="dayCount">${list.length} activiteit(en)</span></div>${list.length?list.map((a,i)=>`<div class="planItem"><div class="badge ${stay.color}">${dn}-${i+1}</div><div style="flex:1"><b>${typeIcon[a.type]||'📍'} ${e(a.name)}</b><div class="meta">${e(a.stay.label)} · ${e(a.drive||'')}</div>${walkMeta(a)}<div>${statusBadge(a)}${labelHtml(a)}</div><div class="controls"><button onclick="move('${key(a)}','${d}',-1)">↑</button><button onclick="move('${key(a)}','${d}',1)">↓</button></div><details class="planDetails"><summary>Details / plannen</summary>${activityDetailsBody(a)}</details></div></div>`).join(''):`<div class="box muted">Nog niets gepland</div>`}</div>`}
 let dragged=null;function dragStart(ev,k){dragged=k}function dropOn(ev,k,d){ev.preventDefault();if(!dragged||dragged===k)return;let list=groupedPlanning()[d]||[];let keys=list.map(key),from=keys.indexOf(dragged),to=keys.indexOf(k);if(from<0||to<0)return;keys.splice(to,0,keys.splice(from,1)[0]);keys.forEach((kk,i)=>setOrder(kk,i+1));save();render()}function move(k,d,delta){let list=groupedPlanning()[d]||[];let keys=list.map(key),i=keys.indexOf(k),j=i+delta;if(i<0||j<0||j>=keys.length)return;[keys[i],keys[j]]=[keys[j],keys[i]];keys.forEach((kk,n)=>setOrder(kk,n+1));save();render()}
 function mapView(){return `<section class="card"><h2>Kaart</h2>${stayFilter()}${statusRow()}<div class="layerToggle"><label class="check ${mapLayers.route?'on':''}"><input type="checkbox" ${mapLayers.route?'checked':''} onchange="mapLayers.route=this.checked;initMap()">Reisroute</label><label class="check ${mapLayers.stays?'on':''}"><input type="checkbox" ${mapLayers.stays?'checked':''} onchange="mapLayers.stays=this.checked;initMap()">Accommodaties</label><label class="check ${mapLayers.activities?'on':''}"><input type="checkbox" ${mapLayers.activities?'checked':''} onchange="mapLayers.activities=this.checked;initMap()">Activiteiten</label></div><p class="muted">Route, accommodaties en activiteiten zijn apart aan/uit te zetten. Activiteiten tonen alleen bij betrouwbare coördinaten.</p><div id="map"></div></section>`}
-function initMap(){if(!window.L)return; if(map)map.remove();map=L.map('map',{scrollWheelZoom:false});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);let pts=[];let routePts=TRIP_ROUTE.map(p=>[p.lat,p.lon]);L.polyline(routePts,{weight:4,opacity:.75}).addTo(map);routePts.forEach(p=>pts.push(p));if(mapLayers.route){let rpts=ROUTE_POINTS.map(p=>[p[0],p[1]]);L.polyline(rpts,{weight:4}).addTo(map);ROUTE_POINTS.forEach((p,i)=>{addPin(p[0],p[1],'c-default',String(i+1),`<b>${p[2]}</b>`);pts.push([p[0],p[1]])})}if(mapLayers.stays){trip.stays.filter(s=>activeStay==='all'||s.id===activeStay).forEach(s=>{addPin(s.lat,s.lon,s.color,'🏠',`<b>${s.label}</b><br>${s.address}<br><a href="${mapsSearch(s.address)}" target="_blank">Maps</a>`);pts.push([s.lat,s.lon])})}if(mapLayers.activities){Object.entries(groupedPlanning()).forEach(([d,list])=>list.forEach((a,i)=>{if(!a.lat||!a.lon)return;let label=`${dayNo(d)}-${i+1}`;addPin(a.lat,a.lon,a.stay.color,label,`<b>${dateLbl(d)} · ${a.name}</b><br>${a.stay.label}<br>${a.drive||''}<br><a href="${a.maps}" target="_blank">Maps</a>`);pts.push([a.lat,a.lon])}))}if(pts.length)map.fitBounds(pts,{padding:[25,25]})}
+function initMap(){if(!window.L)return; if(map)map.remove();map=L.map('map',{scrollWheelZoom:false});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);let pts=[];drawTripRoute(map,pts);TRIP_ROUTE.forEach((p,i)=>{let marker=L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:routeMarkerHtml(p),iconSize:[20,20],iconAnchor:[10,10]})}).addTo(map);marker.bindPopup(`<b>${i+1}. ${p.name}</b>`);});if(mapLayers.route){let rpts=ROUTE_POINTS.map(p=>[p[0],p[1]]);L.polyline(rpts,{weight:4}).addTo(map);ROUTE_POINTS.forEach((p,i)=>{addPin(p[0],p[1],'c-default',String(i+1),`<b>${p[2]}</b>`);pts.push([p[0],p[1]])})}if(mapLayers.stays){trip.stays.filter(s=>activeStay==='all'||s.id===activeStay).forEach(s=>{addPin(s.lat,s.lon,s.color,'🏠',`<b>${s.label}</b><br>${s.address}<br><a href="${mapsSearch(s.address)}" target="_blank">Maps</a>`);pts.push([s.lat,s.lon])})}if(mapLayers.activities){Object.entries(groupedPlanning()).forEach(([d,list])=>list.forEach((a,i)=>{if(!a.lat||!a.lon)return;let label=`${dayNo(d)}-${i+1}`;addPin(a.lat,a.lon,a.stay.color,label,`<b>${dateLbl(d)} · ${a.name}</b><br>${a.stay.label}<br>${a.drive||''}<br><a href="${a.maps}" target="_blank">Maps</a>`);pts.push([a.lat,a.lon])}))}if(pts.length)map.fitBounds(pts,{padding:[25,25]})}
 function addPin(lat,lon,cls,label,pop){let icon=L.divIcon({className:'',html:`<div class="pin ${cls}">${label}</div>`,iconSize:[34,34],iconAnchor:[17,17]});L.marker([lat,lon],{icon}).addTo(map).bindPopup(pop)}
 function staysView(){return `<section class="card"><h2>Verblijven</h2>${trip.stays.map(s=>`<div class="card stayCard"><h2>${e(s.label)}</h2><p><b>${e(s.base)}</b><br>${e(s.address)}</p><div class="links"><a class="btn" target="_blank" href="${mapsSearch(s.address)}">Maps</a><a class="btn" target="_blank" href="${mapsSearch('supermarket near '+s.address)}">🛒 supermarkt</a><a class="btn" target="_blank" href="${mapsSearch('cafe near '+s.address)}">☕ koffie</a><a class="btn" target="_blank" href="${mapsSearch('restaurant near '+s.address)}">🍽 restaurants</a><a class="btn" target="_blank" href="${mapsSearch('EV charging near '+s.address)}">🔌 laden</a></div><div class="info"><b>Weetjes / omgeving</b><ul>${s.facts.map(f=>`<li>${e(f)}</li>`).join('')}</ul></div><details ${showPlan?'open':''}><summary>Aanbevolen plan / tips</summary><ul>${s.tips.map(t=>`<li>${e(t)}</li>`).join('')}</ul></details><div class="section">☕ Koffie & 🍽 diner</div><div class="grid">${s.food.map(f=>`<div class="box"><b>${e(f.name)}</b><p>${e(f.desc)}</p><div class="links"><a class="btn small" target="_blank" href="${f.maps}">Maps</a><a class="btn small" target="_blank" href="${f.menu}">Menu/site</a></div></div>`).join('')}</div></div>`).join('')}</section>`}
 function addView(){return `<section class="card"><h2>Toevoegen</h2><p class="muted">Voeg eerst alleen naam/link, accommodatie en datum toe. Open daarna de activiteit en plak één GPT-blok om velden automatisch te vullen.</p><div class="grid"><label>Accommodatie<br><select id="as">${trip.stays.map(s=>`<option value="${s.id}">${s.label}</option>`).join('')}</select></label><label>Naam of link<br><input id="an" placeholder="Tronoberget of Komoot-link"></label><label>Datum<br><input id="ad" type="date"></label><label>Type<br><select id="at">${Object.keys(typeIcon).map(t=>`<option value="${t}">${typeIcon[t]} ${t}</option>`).join('')}</select></label></div><button class="primary" onclick="addAct()">Toevoegen</button></section>`}
